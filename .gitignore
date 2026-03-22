@@ -1,0 +1,33 @@
+# Unreal Engine
+Binaries/
+Build/
+Intermediate/
+Saved/
+DerivedDataCache/
+FileOpenOrder/
+.idea/
+
+# AI workflow metadata
+.claude/
+
+# Third-party assets (Fab, Mixamo) - license restriction
+Content/Fab/
+Content/Characters/Paladin/
+
+# Visual Studio
+.vs/
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.suo
+*.user
+
+# Compiled
+*.pdb
+*.exp
+*.lib
+
+# OS
+Thumbs.db
+.DS_Store
