@@ -1,17 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 
 #include "Character/BaseCharacter.h"
+#include "Combat/CombatComponent.h"
 
-// Sets default values
 ABaseCharacter::ABaseCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 
 }
 
-// Called when the game starts or when spawned
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
