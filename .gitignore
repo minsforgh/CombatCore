@@ -16,6 +16,8 @@ Content/Characters/Paladin/
 
 # Visual Studio
 .vs/
+*.sln
+.vsconfig
 *.VC.db
 *.opensdf
 *.opendb

@@ -9,6 +9,7 @@
 
 class ABaseCharacter;
 class UAnimMontage;
+class UComboDataAsset;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -36,6 +37,14 @@ private:
 	
 	TWeakObjectPtr<UAnimMontage> ActiveCombatMontage;
 	
+	TWeakObjectPtr<UComboDataAsset> ActiveComboData;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UComboDataAsset> LightComboData;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UComboDataAsset> HeavyComboData;
+	
 	int32 CurrentComboIndex = 0;
 	
 	bool bIsInCancelWindow = false;
@@ -44,21 +53,29 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnCombatStateChanged OnCombatStateChanged;
 	
-public:
 	UFUNCTION(BlueprintCallable)
 	ECombatState GetState() const;
+	
+	UFUNCTION()
+	void HandleCombatInput(EInputType InputType);
 	
 	UFUNCTION(BlueprintCallable)
 	void ResetComboData();
 	
 	UFUNCTION(BlueprintCallable)
 	void EndCombo();
-	
+
 private:
 	
 	bool TryChangeState(ECombatState NewState);
 	
 	UFUNCTION()
 	void OnActiveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	UFUNCTION()
+	void StartCombo(EInputType InputType);
+	
+	UFUNCTION()
+	void AdvanceCombo(EInputType InputType);
 	
 };

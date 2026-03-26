@@ -42,6 +42,13 @@ protected:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* LookAction;
+	
+	/** Light Attack Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* LightAttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* HeavyAttackAction;
 
 public:
 
@@ -63,6 +70,10 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+	void LightAttack(const FInputActionValue& Value);
+	
+	void HeavyAttack(const FInputActionValue& Value);
 	
 public:
 

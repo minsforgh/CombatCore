@@ -33,7 +33,7 @@
 
 ## 현재 진행 상황
 
-- Phase: 0 - 프로젝트 초기화 완료
-- 마지막 완료: 설계서 검토 및 Phase 계획 확정
+- Phase: 2 - 콤보 시스템
+- 마지막 완료: spec-004 UComboDataAsset + 경3타 콤보 + 강공격 분기
 - 진행 중: -
-- 다음: Phase 1 / spec-001 (ABaseCharacter + Enhanced Input)
+- 다음: spec-005 UInputBufferComponent (시간 기반 만료)

@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "CombatTypes.generated.h"
 
+class UAnimMontage;
+
 UENUM(BlueprintType)
 enum class ECombatState : uint8
 {
@@ -12,6 +14,27 @@ enum class ECombatState : uint8
 	HitStun,
 	Dead
 };
+
+UENUM(BlueprintType)
+enum class EInputType : uint8
+{
+	Light,
+	Heavy
+};
+
+USTRUCT(BlueprintType)
+struct FComboStep
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UAnimMontage> Montage;
+	
+	UPROPERTY(EditAnywhere)
+	TMap<EInputType, int32> BranchMap;
+	
+};
+
 
 USTRUCT(BlueprintType)
 struct FCombatStateMachine
@@ -42,7 +65,7 @@ inline bool FCombatStateMachine::CanTransition(ECombatState NewState, bool bIsIn
 	case ECombatState::Attacking:
 		// 공격 중 회피는 CancelWindow 구간에서만 허용
 		if (NewState == ECombatState::Dodging) return bIsInCancelWindow;
-		return NewState == ECombatState::HitStun || NewState == ECombatState::Dead;
+		return NewState == ECombatState::Idle || NewState == ECombatState::HitStun || NewState == ECombatState::Dead;
 		
 	case ECombatState::Dodging:
 		return NewState == ECombatState::Idle || NewState == ECombatState::HitStun || NewState == ECombatState::Dead;

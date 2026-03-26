@@ -9,7 +9,9 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedPlayerInput.h"
 #include "InputActionValue.h"
+#include "Combat/CombatComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {	
@@ -25,7 +27,10 @@ APlayerCharacter::APlayerCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;
-	CameraBoom->bUsePawnControlRotation = true; 
+	CameraBoom->bUsePawnControlRotation = true;
+	
+	CameraBoom->bDoCollisionTest= true;
+	CameraBoom->SetRelativeLocation(FVector(0.0f, 0.0f, 40.0f));
 	
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
@@ -43,6 +48,10 @@ void APlayerCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		
+		// Pitch 제한
+		PC->PlayerCameraManager->ViewPitchMin = -60.f;
+		PC->PlayerCameraManager->ViewPitchMax = 30.f;
 	}
 }
 
@@ -59,6 +68,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// 점프
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		
+		// 경공격
+		EnhancedInputComponent->BindAction(LightAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::LightAttack);
+		
+		//강공격
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::HeavyAttack);
 	}
 }
 
@@ -91,6 +106,22 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	
 	// 컨트롤러(카메라)에 회전 적용
 	AddControllerYawInput(LookAxisVector.X);
-	AddControllerPitchInput(LookAxisVector.Y);
+	AddControllerPitchInput(-LookAxisVector.Y);
 	
+}
+
+void APlayerCharacter::LightAttack(const FInputActionValue& Value)
+{
+	if (UCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->HandleCombatInput(EInputType::Light);
+	}
+}
+
+void APlayerCharacter::HeavyAttack(const FInputActionValue& Value)
+{
+	if (UCombatComponent* Combat = GetCombatComponent())
+	{
+		Combat->HandleCombatInput(EInputType::Heavy);
+	}
 }

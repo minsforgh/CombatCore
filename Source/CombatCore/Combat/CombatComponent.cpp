@@ -1,4 +1,6 @@
 #include "Combat/CombatComponent.h"
+
+#include "ComboDataAsset.h"
 #include "Character/BaseCharacter.h"
 
 
@@ -59,12 +61,92 @@ ECombatState UCombatComponent::GetState() const
 	return StateMachine.GetState();
 }
 
+void UCombatComponent::HandleCombatInput(EInputType InputType)
+{
+	if (GetState() == ECombatState::Idle)
+	{
+		StartCombo(InputType);
+	}
+	else if (GetState() == ECombatState::Attacking)
+	{
+		AdvanceCombo(InputType);
+	}
+}
+
+void UCombatComponent::StartCombo(EInputType InputType)
+{	
+	UComboDataAsset* ComboData = nullptr;
+	if (InputType == EInputType::Light) ComboData = LightComboData;
+	else if (InputType == EInputType::Heavy) ComboData = HeavyComboData;
+	
+	if (!ComboData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCombatComponent: Invalid ComboData"));
+		return;
+	}
+
+	const FComboStep* Step = ComboData->GetStep(0);
+	if (!Step)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCombatComponent: ComboData has no Step 0"));
+		return;
+	}
+
+	ActiveComboData = ComboData;
+	
+	if (!Step->Montage)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UCombatComponent:MontageToPlay is NULL"));
+		return;
+	}
+	
+	if (!TryChangeState(ECombatState::Attacking))
+	{
+		return;
+	}
+	
+	const float Duration = OwnerCharacter->PlayAnimMontage(Step->Montage);
+	if (Duration <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayAnimMontage failed"));
+		EndCombo();
+		return;
+	}
+	ActiveCombatMontage = Step->Montage;
+	CurrentComboIndex = 0;
+}
+
+void UCombatComponent::AdvanceCombo(EInputType InputType)
+{	
+	if (ActiveComboData == nullptr) return;
+
+	const FComboStep* Step = ActiveComboData->GetStep(CurrentComboIndex);
+	if (!Step) return;
+
+	const int32* NextIndex = Step->BranchMap.Find(InputType);
+	if (!NextIndex) return;
+
+	const FComboStep* NextStep = ActiveComboData->GetStep(*NextIndex);
+	if (!NextStep || !NextStep->Montage) return;
+
+	const float Duration = OwnerCharacter->PlayAnimMontage(NextStep->Montage);
+	if (Duration <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayAnimMontage failed"));
+		EndCombo();
+		return;
+	}
+	ActiveCombatMontage = NextStep->Montage;
+	CurrentComboIndex = *NextIndex;
+}
+
 // 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
 void UCombatComponent::ResetComboData()
 {
 	CurrentComboIndex = 0;
 	bIsInCancelWindow = false;
 	ActiveCombatMontage = nullptr;
+	ActiveComboData = nullptr;
 }
 
 // 콤보 자연 종료 — 데이터 정리 + Idle 복귀
@@ -74,7 +156,7 @@ void UCombatComponent::EndCombo()
 	TryChangeState(ECombatState::Idle);
 }
 
-// 상태 전이를 여기서만 하면 델리게이트 브로드캐스트 누락 방지
+// 모든 상태 전이는 이 함수를 통해야 한다 — Broadcast 경로를 단일화하여 누락 방지
 bool UCombatComponent::TryChangeState(ECombatState NewState)
 {
 	const ECombatState OldState = StateMachine.GetState();
@@ -83,7 +165,9 @@ bool UCombatComponent::TryChangeState(ECombatState NewState)
 	{
 		return false;
 	}
+	
 	OnCombatStateChanged.Broadcast(OldState, NewState);
+	
 	return true;
 }
 
