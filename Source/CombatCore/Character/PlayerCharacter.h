@@ -10,6 +10,7 @@ class UInputMappingContext;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UInputBufferComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -24,6 +25,9 @@ class COMBATCORE_API APlayerCharacter : public ABaseCharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputBufferComponent> InputBufferComponent;
 	
 protected:
 	
@@ -82,4 +86,6 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	
+	FORCEINLINE UInputBufferComponent* GetInputBufferComponent() const { return InputBufferComponent; }
 };

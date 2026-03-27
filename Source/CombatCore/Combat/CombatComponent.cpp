@@ -1,6 +1,7 @@
 #include "Combat/CombatComponent.h"
 
 #include "ComboDataAsset.h"
+#include "InputBufferComponent.h"
 #include "Character/BaseCharacter.h"
 
 
@@ -21,7 +22,10 @@ void UCombatComponent::BeginPlay()
 		SetActive(false);
 		return;
 	}
-
+	
+	// 플레이어 전용 — 적 캐릭터에는 없으므로 nullptr 허용
+	InputBufferComponent = OwnerCharacter->FindComponentByClass<UInputBufferComponent>();
+	
 	USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
 	if (!Mesh)
 	{
@@ -69,7 +73,11 @@ void UCombatComponent::HandleCombatInput(EInputType InputType)
 	}
 	else if (GetState() == ECombatState::Attacking)
 	{
-		AdvanceCombo(InputType);
+		if (InputBufferComponent.IsValid())
+		{
+			InputBufferComponent->BufferInput(InputType);
+		}
+		TryConsumeBufferedInput();
 	}
 }
 
@@ -140,6 +148,19 @@ void UCombatComponent::AdvanceCombo(EInputType InputType)
 	CurrentComboIndex = *NextIndex;
 }
 
+// 버퍼에 유효한 입력이 있으면 소비하여 콤보 진행
+void UCombatComponent::TryConsumeBufferedInput()
+{
+	if (!InputBufferComponent.IsValid()) return;
+
+	EInputType ConsumedInputType;
+	if (InputBufferComponent->ConsumeBuffer(ConsumedInputType))
+	{
+		AdvanceCombo(ConsumedInputType);
+	}
+	
+}
+
 // 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
 void UCombatComponent::ResetComboData()
 {
@@ -147,6 +168,8 @@ void UCombatComponent::ResetComboData()
 	bIsInCancelWindow = false;
 	ActiveCombatMontage = nullptr;
 	ActiveComboData = nullptr;
+	
+	if (InputBufferComponent.IsValid()) InputBufferComponent->ClearBuffer();
 }
 
 // 콤보 자연 종료 — 데이터 정리 + Idle 복귀

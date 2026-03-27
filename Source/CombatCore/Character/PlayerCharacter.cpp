@@ -12,6 +12,7 @@
 #include "EnhancedPlayerInput.h"
 #include "InputActionValue.h"
 #include "Combat/CombatComponent.h"
+#include "Combat/InputBufferComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {	
@@ -35,6 +36,8 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+	
+	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
 }
 
 void APlayerCharacter::BeginPlay()

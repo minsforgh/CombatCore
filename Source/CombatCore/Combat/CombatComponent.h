@@ -10,6 +10,7 @@
 class ABaseCharacter;
 class UAnimMontage;
 class UComboDataAsset;
+class UInputBufferComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -38,6 +39,8 @@ private:
 	TWeakObjectPtr<UAnimMontage> ActiveCombatMontage;
 	
 	TWeakObjectPtr<UComboDataAsset> ActiveComboData;
+	
+	TWeakObjectPtr<UInputBufferComponent> InputBufferComponent;
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UComboDataAsset> LightComboData;
@@ -77,5 +80,7 @@ private:
 	
 	UFUNCTION()
 	void AdvanceCombo(EInputType InputType);
+	
+	void TryConsumeBufferedInput();
 	
 };
