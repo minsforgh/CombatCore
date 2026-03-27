@@ -9,6 +9,7 @@ FileOpenOrder/
 
 # AI workflow metadata
 .claude/
+CLAUDE.md
 
 # Third-party assets (Fab, Mixamo) - license restriction
 Content/Fab/
