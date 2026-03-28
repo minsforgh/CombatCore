@@ -51,6 +51,8 @@ private:
 	int32 CurrentComboIndex = 0;
 	
 	bool bIsInCancelWindow = false;
+	
+	bool bComboAdvanceReady = false;
 
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -83,4 +85,14 @@ private:
 	
 	void TryConsumeBufferedInput();
 	
+public:
+	void OnConsumeWindowEnter();
+	
+	void OnConsumeWindowExit();
+	
+	void OnCancelWindowEnter();
+	
+	void OnCancelWindowExit();
+	
+	void OnComboResetNotify();
 };

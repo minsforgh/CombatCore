@@ -77,7 +77,11 @@ void UCombatComponent::HandleCombatInput(EInputType InputType)
 		{
 			InputBufferComponent->BufferInput(InputType);
 		}
-		TryConsumeBufferedInput();
+		
+		if (bComboAdvanceReady)
+		{
+			TryConsumeBufferedInput();
+		}
 	}
 }
 
@@ -146,6 +150,7 @@ void UCombatComponent::AdvanceCombo(EInputType InputType)
 	}
 	ActiveCombatMontage = NextStep->Montage;
 	CurrentComboIndex = *NextIndex;
+	bComboAdvanceReady = false;
 }
 
 // 버퍼에 유효한 입력이 있으면 소비하여 콤보 진행
@@ -161,11 +166,38 @@ void UCombatComponent::TryConsumeBufferedInput()
 	
 }
 
+void UCombatComponent::OnConsumeWindowEnter()
+{
+	bComboAdvanceReady = true;
+	TryConsumeBufferedInput();
+}
+
+void UCombatComponent::OnConsumeWindowExit()
+{
+	bComboAdvanceReady = false;
+}
+
+void UCombatComponent::OnCancelWindowEnter()
+{
+	bIsInCancelWindow = true;
+}
+
+void UCombatComponent::OnCancelWindowExit()
+{
+	bIsInCancelWindow = false;
+}
+
+void UCombatComponent::OnComboResetNotify()
+{
+	if (GetState() == ECombatState::Attacking) EndCombo();
+}
+
 // 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
 void UCombatComponent::ResetComboData()
 {
 	CurrentComboIndex = 0;
 	bIsInCancelWindow = false;
+	bComboAdvanceReady = false;
 	ActiveCombatMontage = nullptr;
 	ActiveComboData = nullptr;
 	
