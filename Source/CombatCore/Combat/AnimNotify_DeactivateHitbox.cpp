@@ -1,14 +1,18 @@
 
 #include "Combat/AnimNotify_DeactivateHitbox.h"
+#include "Combat/HitboxManager.h"
 
 void UAnimNotify_DeactivateHitbox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	const FAnimNotifyEventReference& EventReference)
+                                          const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);
 	
 	if (AActor* Owner = MeshComp->GetOwner())
 	{
-		UE_LOG(LogTemp, Log, TEXT("DeactivateHitbox: %s"), *Owner->GetName());
+		if (UHitboxManager* HM = Owner->FindComponentByClass<UHitboxManager>())
+		{
+			HM->StopDetection();
+		}
 	}
 }
 

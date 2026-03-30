@@ -13,6 +13,8 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	CombatComponent = FindComponentByClass<UCombatComponent>();
+
 	
 }
 

@@ -1,6 +1,6 @@
 #include "Combat/CombatComponent.h"
-
 #include "ComboDataAsset.h"
+#include "Combat/HitboxManager.h"
 #include "InputBufferComponent.h"
 #include "Character/BaseCharacter.h"
 
@@ -14,7 +14,7 @@ UCombatComponent::UCombatComponent()
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	OwnerCharacter = Cast<ABaseCharacter>(GetOwner());
 	if (!OwnerCharacter)
 	{
@@ -23,8 +23,15 @@ void UCombatComponent::BeginPlay()
 		return;
 	}
 	
+	
 	// 플레이어 전용 — 적 캐릭터에는 없으므로 nullptr 허용
 	InputBufferComponent = OwnerCharacter->FindComponentByClass<UInputBufferComponent>();
+	
+	HitboxManager = OwnerCharacter->FindComponentByClass<UHitboxManager>();
+	if (HitboxManager)
+	{
+		HitboxManager->OnHitDetected.AddDynamic(this, &UCombatComponent::HandleHitDetected);
+	}
 	
 	USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
 	if (!Mesh)
@@ -56,6 +63,11 @@ void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			}
 		}
 	}
+	
+	if (HitboxManager)
+	{
+		HitboxManager->OnHitDetected.RemoveDynamic(this, &UCombatComponent::HandleHitDetected);
+	}
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -65,6 +77,7 @@ ECombatState UCombatComponent::GetState() const
 	return StateMachine.GetState();
 }
 
+// Idle이면 콤보 시작, Attacking 중이면 버퍼에 저장 후 소비 구간이면 즉시 진행
 void UCombatComponent::HandleCombatInput(EInputType InputType)
 {
 	if (GetState() == ECombatState::Idle)
@@ -202,6 +215,8 @@ void UCombatComponent::ResetComboData()
 	ActiveComboData = nullptr;
 	
 	if (InputBufferComponent.IsValid()) InputBufferComponent->ClearBuffer();
+	
+	if (HitboxManager) HitboxManager->StopDetection();
 }
 
 // 콤보 자연 종료 — 데이터 정리 + Idle 복귀
@@ -209,6 +224,12 @@ void UCombatComponent::EndCombo()
 {
 	ResetComboData();
 	TryChangeState(ECombatState::Idle);
+}
+
+void UCombatComponent::HandleHitDetected(const FHitResult& HitResult, AActor* HitActor)
+{
+	if (!HitActor) return;
+	UE_LOG(LogTemp, Log, TEXT("Hit detected: %s"), *HitActor->GetName());
 }
 
 // 모든 상태 전이는 이 함수를 통해야 한다 — Broadcast 경로를 단일화하여 누락 방지

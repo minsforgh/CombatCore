@@ -11,6 +11,7 @@ class ABaseCharacter;
 class UAnimMontage;
 class UComboDataAsset;
 class UInputBufferComponent;
+class UHitboxManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -32,7 +33,10 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<ABaseCharacter> OwnerCharacter;
-
+	
+	UPROPERTY()
+	TObjectPtr<UHitboxManager> HitboxManager;
+	
 	UPROPERTY()
 	FCombatStateMachine StateMachine;
 	
@@ -69,6 +73,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void EndCombo();
+	
+	UFUNCTION()
+	void HandleHitDetected(const FHitResult& HitResult, AActor* HitActor);
 
 private:
 	

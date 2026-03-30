@@ -5,6 +5,8 @@
 #include "AnimNotifyState_CancelWindow.generated.h"
 
 
+// 이 구간 동안 Attacking → Idle 등 상태 전이를 허용한다
+// CombatStateMachine의 bCanCancel 플래그를 제어
 UCLASS()
 class COMBATCORE_API UAnimNotifyState_CancelWindow : public UAnimNotifyState
 {
