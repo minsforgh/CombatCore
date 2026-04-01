@@ -33,8 +33,33 @@ struct FComboStep
 	UPROPERTY(EditAnywhere)
 	TMap<EInputType, int32> BranchMap;
 	
+	UPROPERTY(EditAnywhere)
+	float Damage = 10.f;
+	
 };
 
+USTRUCT(BlueprintType)
+struct FDamageInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	float Damage = 0.f;
+	
+	UPROPERTY(EditAnywhere)
+	float KnockbackForce = 0.f;
+	
+	UPROPERTY()
+	FVector KnockbackDirection = FVector::ZeroVector;
+	
+	TWeakObjectPtr<AActor> Instigator;
+	
+	UPROPERTY(EditAnywhere)
+	float HitStopDuration = 0.f;
+	
+	UPROPERTY()
+	FHitResult HitResult;
+};
 
 USTRUCT(BlueprintType)
 struct FCombatStateMachine

@@ -1,5 +1,6 @@
 #include "Combat/CombatComponent.h"
 #include "ComboDataAsset.h"
+#include "HealthComponent.h"
 #include "Combat/HitboxManager.h"
 #include "InputBufferComponent.h"
 #include "Character/BaseCharacter.h"
@@ -27,11 +28,13 @@ void UCombatComponent::BeginPlay()
 	// 플레이어 전용 — 적 캐릭터에는 없으므로 nullptr 허용
 	InputBufferComponent = OwnerCharacter->FindComponentByClass<UInputBufferComponent>();
 	
-	HitboxManager = OwnerCharacter->FindComponentByClass<UHitboxManager>();
+	HitboxManager = OwnerCharacter->GetHitboxManager();
 	if (HitboxManager)
 	{
 		HitboxManager->OnHitDetected.AddDynamic(this, &UCombatComponent::HandleHitDetected);
 	}
+	
+	HealthComponent = OwnerCharacter->GetHealthComponent();
 	
 	USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh();
 	if (!Mesh)
@@ -68,6 +71,8 @@ void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		HitboxManager->OnHitDetected.RemoveDynamic(this, &UCombatComponent::HandleHitDetected);
 	}
+
+	GetWorld()->GetTimerManager().ClearTimer(HitStunTimerHandle);
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -179,6 +184,14 @@ void UCombatComponent::TryConsumeBufferedInput()
 	
 }
 
+void UCombatComponent::OnHitStunEnd()
+{
+	if (GetState() == ECombatState::HitStun)
+	{
+		TryChangeState(ECombatState::Idle);
+	}
+}
+
 void UCombatComponent::OnConsumeWindowEnter()
 {
 	bComboAdvanceReady = true;
@@ -226,10 +239,64 @@ void UCombatComponent::EndCombo()
 	TryChangeState(ECombatState::Idle);
 }
 
+// 공격자 측 — FDamageInfo를 조립하여 피격자의 ReceiveDamage로 전달
 void UCombatComponent::HandleHitDetected(const FHitResult& HitResult, AActor* HitActor)
 {
 	if (!HitActor) return;
-	UE_LOG(LogTemp, Log, TEXT("Hit detected: %s"), *HitActor->GetName());
+	
+	UCombatComponent* TargetCombat = HitActor->FindComponentByClass<UCombatComponent>();
+	if (!TargetCombat) return;
+	
+	FDamageInfo DamageInfo;
+	DamageInfo.Instigator = GetOwner();
+	DamageInfo.HitResult = HitResult;
+	
+	if (ActiveComboData.IsValid())
+	{
+		const FComboStep* Step = ActiveComboData->GetStep(CurrentComboIndex);
+		if (Step)
+		{
+			DamageInfo.Damage = Step->Damage;
+		}
+	}
+	
+	FVector Direction = (HitActor->GetActorLocation() - GetOwner()->GetActorLocation()).GetSafeNormal();
+	DamageInfo.KnockbackDirection = Direction;
+	
+	TargetCombat->ReceiveDamage(DamageInfo);
+}
+
+// 피격자 측 — 데미지 적용 + 상태 전이 (HitStun/Dead)
+// Attacking 중이면 콤보 데이터를 먼저 정리하고, 상태와 무관하게 몽타주 정지
+void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
+{
+	if (GetState() == ECombatState::Dead) return;
+	
+	if (!HealthComponent) return;
+	
+	HealthComponent->ApplyDamage(DamageInfo);
+	
+	if (GetState() == ECombatState::Attacking)
+	{
+		ResetComboData();
+	}
+	
+	OwnerCharacter->StopAnimMontage();
+	
+	if (HealthComponent->IsAlive())
+	{
+		if (TryChangeState(ECombatState::HitStun))
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				HitStunTimerHandle, this,
+				&UCombatComponent::OnHitStunEnd,
+				0.5f, false);
+		}
+	}
+	else
+	{
+		TryChangeState(ECombatState::Dead);
+	}
 }
 
 // 모든 상태 전이는 이 함수를 통해야 한다 — Broadcast 경로를 단일화하여 누락 방지

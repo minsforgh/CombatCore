@@ -32,7 +32,9 @@ void UHitboxManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!WeaponMesh) return;
-
+	
+	CurrentTracePoints.SetNum(TracePointCount);
+	
 	// 1. 소켓 간 보간점 계산
 	const FVector StartPos = WeaponMesh->GetSocketLocation(TraceStartSocket);
 	const FVector EndPos = WeaponMesh->GetSocketLocation(TraceEndSocket);

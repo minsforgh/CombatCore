@@ -12,6 +12,7 @@ class UAnimMontage;
 class UComboDataAsset;
 class UInputBufferComponent;
 class UHitboxManager;
+class UHealthComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -36,6 +37,9 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<UHitboxManager> HitboxManager;
+	
+	UPROPERTY()
+	TObjectPtr<UHealthComponent> HealthComponent;
 	
 	UPROPERTY()
 	FCombatStateMachine StateMachine;
@@ -76,6 +80,9 @@ public:
 	
 	UFUNCTION()
 	void HandleHitDetected(const FHitResult& HitResult, AActor* HitActor);
+	
+	UFUNCTION()
+	void ReceiveDamage(const FDamageInfo& DamageInfo);
 
 private:
 	
@@ -91,6 +98,10 @@ private:
 	void AdvanceCombo(EInputType InputType);
 	
 	void TryConsumeBufferedInput();
+	
+	FTimerHandle HitStunTimerHandle;
+	
+	void OnHitStunEnd();
 	
 public:
 	void OnConsumeWindowEnter();
