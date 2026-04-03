@@ -46,15 +46,29 @@ private:
 	
 	TWeakObjectPtr<UAnimMontage> ActiveCombatMontage;
 	
+	TWeakObjectPtr<UAnimMontage> ActiveHitReactionMontage;
+	
 	TWeakObjectPtr<UComboDataAsset> ActiveComboData;
 	
 	TWeakObjectPtr<UInputBufferComponent> InputBufferComponent;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "ComboData")
 	TObjectPtr<UComboDataAsset> LightComboData;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "ComboData")
 	TObjectPtr<UComboDataAsset> HeavyComboData;
+	
+	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+	TObjectPtr<UAnimMontage> HitReaction_Front;
+	
+	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+	TObjectPtr<UAnimMontage> HitReaction_Back;
+	
+	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+	TObjectPtr<UAnimMontage> HitReaction_Left;
+	
+	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+	TObjectPtr<UAnimMontage> HitReaction_Right;
 	
 	int32 CurrentComboIndex = 0;
 	
@@ -99,9 +113,9 @@ private:
 	
 	void TryConsumeBufferedInput();
 	
-	FTimerHandle HitStunTimerHandle;
+	EHitDirection CalcHitDirection(const FVector& InstigatorLocation) const;
 	
-	void OnHitStunEnd();
+	void PlayHitReaction(EHitDirection Direction);
 	
 public:
 	void OnConsumeWindowEnter();

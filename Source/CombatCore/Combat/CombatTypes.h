@@ -22,6 +22,15 @@ enum class EInputType : uint8
 	Heavy
 };
 
+UENUM(BlueprintType)
+enum class EHitDirection : uint8
+{
+	Forward,
+	Back,
+	Left,
+	Right
+};
+
 USTRUCT(BlueprintType)
 struct FComboStep
 {
@@ -35,6 +44,9 @@ struct FComboStep
 	
 	UPROPERTY(EditAnywhere)
 	float Damage = 10.f;
+	
+	UPROPERTY(EditAnywhere)
+	float KnockbackForce = 300.f;
 	
 };
 
@@ -96,7 +108,7 @@ inline bool FCombatStateMachine::CanTransition(ECombatState NewState, bool bIsIn
 		return NewState == ECombatState::Idle || NewState == ECombatState::HitStun || NewState == ECombatState::Dead;
 		
 	case ECombatState::HitStun:
-		return NewState == ECombatState::Idle || NewState == ECombatState::Dead;
+		return NewState == ECombatState::Idle || NewState == ECombatState::Dead || NewState == ECombatState::HitStun;
 		
 	case ECombatState::Dead:
 		return false;
