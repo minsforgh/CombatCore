@@ -1,5 +1,5 @@
 #include "Combat/HitboxManager.h"
-#include "Components/StaticMeshComponent.h"
+#include "GameFramework/Character.h"
 #include "DrawDebugHelpers.h"
 
 UHitboxManager::UHitboxManager()
@@ -15,9 +15,17 @@ void UHitboxManager::BeginPlay()
 
 	if (AActor* Owner = GetOwner())
 	{
-		WeaponMesh = Cast<UStaticMeshComponent>(Owner->GetDefaultSubobjectByName(TEXT("Weapon")));
-	}
+		TraceSource = Cast<USceneComponent>(Owner->GetDefaultSubobjectByName(TEXT("Weapon")));
 
+		if (!TraceSource)
+		{
+			if (ACharacter* CharOwner = Cast<ACharacter>(Owner))
+			{
+				TraceSource = CharOwner->GetMesh();	
+			}
+		}
+	}
+	
 	TraceParams.AddIgnoredActor(GetOwner());
 	TraceParams.bTraceComplex = false;
 	TraceParams.bReturnPhysicalMaterial = false;
@@ -31,13 +39,13 @@ void UHitboxManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!WeaponMesh) return;
+	if (!TraceSource) return;
 	
 	CurrentTracePoints.SetNum(TracePointCount);
 	
 	// 1. 소켓 간 보간점 계산
-	const FVector StartPos = WeaponMesh->GetSocketLocation(TraceStartSocket);
-	const FVector EndPos = WeaponMesh->GetSocketLocation(TraceEndSocket);
+	const FVector StartPos = TraceSource->GetSocketLocation(TraceStartSocket);
+	const FVector EndPos = TraceSource->GetSocketLocation(TraceEndSocket);
 	for (int32 i = 0; i < TracePointCount; i++)
 	{
 		const float Alpha = (TracePointCount > 1)

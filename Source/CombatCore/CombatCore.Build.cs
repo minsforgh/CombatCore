@@ -15,6 +15,7 @@ public class CombatCore : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AIModule",
+			"GameplayTasks",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",

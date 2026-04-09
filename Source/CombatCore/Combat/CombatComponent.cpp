@@ -364,7 +364,7 @@ bool UCombatComponent::TryChangeState(ECombatState NewState)
 // 콤보 연계로 이미 다음 몽타주가 재생 중이면 불일치 -> 무시
 void UCombatComponent::OnActiveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Montage && Montage == ActiveCombatMontage.Get() && StateMachine.GetState() == ECombatState::Attacking)
+	if (Montage && Montage == ActiveCombatMontage.Get() && !bInterrupted && StateMachine.GetState() == ECombatState::Attacking)
 	{
 		EndCombo();
 	}
