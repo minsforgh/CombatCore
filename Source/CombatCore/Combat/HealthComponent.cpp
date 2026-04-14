@@ -5,7 +5,13 @@
 UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	
+	bWantsInitializeComponent = true;
+}
+
+void UHealthComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	CurrentHealth = MaxHealth;
 }
 
 void UHealthComponent::ApplyDamage(const FDamageInfo& DamageInfo)
@@ -33,10 +39,6 @@ float UHealthComponent::GetHealthPercent() const
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	CurrentHealth = MaxHealth;
-
-	
 }
 
 

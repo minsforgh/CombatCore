@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -6,13 +5,8 @@
 #include "GameFramework/PlayerController.h"
 #include "CombatCorePlayerController.generated.h"
 
-class UInputMappingContext;
-class UUserWidget;
+class UHealthBarWidget;
 
-/**
- *  Basic PlayerController class for a third person game
- *  Manages input mappings
- */
 UCLASS(abstract)
 class ACombatCorePlayerController : public APlayerController
 {
@@ -20,25 +14,12 @@ class ACombatCorePlayerController : public APlayerController
 	
 protected:
 
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
-	TArray<UInputMappingContext*> DefaultMappingContexts;
-
-	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
-	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
-
-	/** Mobile controls widget to spawn */
-	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
-	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
-
-	/** Pointer to the mobile controls widget */
-	TObjectPtr<UUserWidget> MobileControlsWidget;
-
-	/** Gameplay initialization */
-	virtual void BeginPlay() override;
-
-	/** Input mapping context setup */
-	virtual void SetupInputComponent() override;
+	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	TSubclassOf<UHealthBarWidget> PlayerHUDClass;
+	
+	UPROPERTY()
+	TObjectPtr<UHealthBarWidget> PlayerHUDWidget;
+	
+	virtual void OnPossess(APawn* InPawn) override;
 
 };

@@ -49,7 +49,7 @@ void UCombatComponent::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("UCombatComponent: AnimInstace is NULL"));
+		UE_LOG(LogTemp, Error, TEXT("UCombatComponent: AnimInstance is NULL"));
 	}
 }
 

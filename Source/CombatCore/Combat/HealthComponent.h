@@ -40,8 +40,15 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	float GetHealthPercent() const;
+	
+	UFUNCTION(BlueprintCallable)
+	float GetMaxHealth() const {return MaxHealth;}
+	
+	UFUNCTION(BlueprintCallable)
+	float GetCurrentHealth() const {return CurrentHealth;}
 
 protected:
+	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
 

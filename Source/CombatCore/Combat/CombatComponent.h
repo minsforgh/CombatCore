@@ -52,22 +52,22 @@ private:
 	
 	TWeakObjectPtr<UInputBufferComponent> InputBufferComponent;
 	
-	UPROPERTY(EditAnywhere, Category = "ComboData")
+	UPROPERTY(EditAnywhere, Category = "ComboData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UComboDataAsset> LightComboData;
-	
-	UPROPERTY(EditAnywhere, Category = "ComboData")
+
+	UPROPERTY(EditAnywhere, Category = "ComboData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UComboDataAsset> HeavyComboData;
-	
-	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+
+	UPROPERTY(EditAnywhere, Category = "HitReaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> HitReaction_Front;
-	
-	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+
+	UPROPERTY(EditAnywhere, Category = "HitReaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> HitReaction_Back;
-	
-	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+
+	UPROPERTY(EditAnywhere, Category = "HitReaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> HitReaction_Left;
-	
-	UPROPERTY(EditAnywhere, Category = "HitReaction")	
+
+	UPROPERTY(EditAnywhere, Category = "HitReaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> HitReaction_Right;
 	
 	int32 CurrentComboIndex = 0;

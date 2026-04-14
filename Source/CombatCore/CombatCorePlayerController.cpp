@@ -1,61 +1,33 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 
 #include "CombatCorePlayerController.h"
-#include "EnhancedInputSubsystems.h"
-#include "Engine/LocalPlayer.h"
-#include "InputMappingContext.h"
-#include "Blueprint/UserWidget.h"
-#include "CombatCore.h"
-#include "Widgets/Input/SVirtualJoystick.h"
+#include "Character/BaseCharacter.h"
+#include "Combat/HealthComponent.h"
+#include "UI/HealthBarWidget.h"
 
-void ACombatCorePlayerController::BeginPlay()
+
+void ACombatCorePlayerController::OnPossess(APawn* InPawn)
 {
-	Super::BeginPlay();
-
-	// only spawn touch controls on local player controllers
-	if (SVirtualJoystick::ShouldDisplayTouchInterface() && IsLocalPlayerController())
+	Super::OnPossess(InPawn);
+	
+	if (!IsLocalPlayerController())
 	{
-		// spawn the mobile controls widget
-		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);
-
-		if (MobileControlsWidget)
-		{
-			// add the controls to the player screen
-			MobileControlsWidget->AddToPlayerScreen(0);
-
-		} else {
-
-			UE_LOG(LogCombatCore, Error, TEXT("Could not spawn mobile controls widget."));
-
-		}
-
+		return;
 	}
-}
-
-void ACombatCorePlayerController::SetupInputComponent()
-{
-	Super::SetupInputComponent();
-
-	// only add IMCs for local player controllers
-	if (IsLocalPlayerController())
+	
+	if (!PlayerHUDWidget && PlayerHUDClass)
 	{
-		// Add Input Mapping Contexts
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		PlayerHUDWidget = CreateWidget<UHealthBarWidget>(this, PlayerHUDClass);
+		if (PlayerHUDWidget)
 		{
-			for (UInputMappingContext* CurrentContext : DefaultMappingContexts)
-			{
-				Subsystem->AddMappingContext(CurrentContext, 0);
-			}
-
-			// only add these IMCs if we're not using mobile touch input
-			if (!SVirtualJoystick::ShouldDisplayTouchInterface())
-			{
-				for (UInputMappingContext* CurrentContext : MobileExcludedMappingContexts)
-				{
-					Subsystem->AddMappingContext(CurrentContext, 0);
-				}
-			}
+			PlayerHUDWidget->AddToViewport();
+		}
+	}
+	
+	if (PlayerHUDWidget)
+	{
+		if (ABaseCharacter* Char = Cast<ABaseCharacter>(InPawn))
+		{
+			PlayerHUDWidget->BindToHealthComponent(Char->GetHealthComponent());
 		}
 	}
 }
