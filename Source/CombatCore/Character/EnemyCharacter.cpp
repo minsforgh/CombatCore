@@ -10,12 +10,14 @@
 
 AEnemyCharacter::AEnemyCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	
+
 	AIControllerClass = AEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-	
+
 	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidget"));
 	HealthBarWidgetComponent->SetupAttachment(GetMesh());
 	HealthBarWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
@@ -26,7 +28,7 @@ AEnemyCharacter::AEnemyCharacter()
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (UHealthBarWidget* Widget =  Cast<UHealthBarWidget>(HealthBarWidgetComponent->GetUserWidgetObject()))
 	{
 		if (UHealthComponent* HealthComp = GetHealthComponent())
@@ -35,24 +37,23 @@ void AEnemyCharacter::BeginPlay()
 			HealthComp->OnDeath.AddDynamic(this, &AEnemyCharacter::HandleSelfDeath);
 		}
 	}
-	
-	GetWorldTimerManager().SetTimer(
-		VisibilityTimerHandle,
-		this, &AEnemyCharacter::UpdateHealthBarVisibility,
-		0.2f, true);
-	
 }
 
 void AEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{	
-	GetWorldTimerManager().ClearTimer(VisibilityTimerHandle);
-	
+{
 	if (UHealthComponent* HealthComp = GetHealthComponent())
 	{
 		HealthComp->OnDeath.RemoveDynamic(this, &AEnemyCharacter::HandleSelfDeath);
 	}
-	
+
 	Super::EndPlay(EndPlayReason);
+}
+
+void AEnemyCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	UpdateHealthBar();
 }
 
 void AEnemyCharacter::HandleSelfDeath(const FDamageInfo& Info)
@@ -63,26 +64,37 @@ void AEnemyCharacter::HandleSelfDeath(const FDamageInfo& Info)
 	}
 }
 
-void AEnemyCharacter::UpdateHealthBarVisibility()
+void AEnemyCharacter::UpdateHealthBar()
 {
 	if (!HealthBarWidgetComponent)
 	{
 		return;
 	}
-	
+
 	APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(this, 0);
 	if (!PCM)
 	{
 		return;
 	}
-	
+
 	UHealthComponent* HealthComp = GetHealthComponent();
 	const bool bAlive = HealthComp && HealthComp->IsAlive();
-	const float Dist = FVector::Dist(GetActorLocation(), PCM->GetCameraLocation());
+	const FVector CameraLocation = PCM->GetCameraLocation();
+	const float Dist = FVector::Dist(GetActorLocation(), CameraLocation);
 	const bool bVisible = bAlive && (Dist < HealthBarMaxVisibleDistance);
 
 	if (HealthBarWidgetComponent->IsVisible() != bVisible)
 	{
 		HealthBarWidgetComponent->SetVisibility(bVisible);
+	}
+
+	if (bVisible)
+	{
+		const FVector WidgetLocation = HealthBarWidgetComponent->GetComponentLocation();
+		const FVector LookDir = (CameraLocation - WidgetLocation).GetSafeNormal();
+		if (!LookDir.IsNearlyZero())
+		{
+			HealthBarWidgetComponent->SetWorldRotation(LookDir.Rotation());
+		}
 	}
 }

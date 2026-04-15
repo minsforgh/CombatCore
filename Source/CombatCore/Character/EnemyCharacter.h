@@ -18,18 +18,17 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+	virtual void Tick(float DeltaSeconds) override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent;
-	
+
 	UPROPERTY(EditAnywhere, Category = "UI")
 	float HealthBarMaxVisibleDistance = 3000.f;
-	
+
 private:
 	UFUNCTION()
 	void HandleSelfDeath(const FDamageInfo& Info);
-	
-	void UpdateHealthBarVisibility();
-	
-	FTimerHandle VisibilityTimerHandle;
+
+	void UpdateHealthBar();
 };
