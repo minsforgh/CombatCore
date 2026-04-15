@@ -1,8 +1,10 @@
 
 #include "AI/BTTask_Attack.h"
 #include "AIController.h"
+#include "EnemyAIController.h"
 #include "Combat/CombatComponent.h"
 #include "Character/BaseCharacter.h"
+#include "AI/EnemyAIController.h"
 
 
 UBTTask_Attack::UBTTask_Attack()
@@ -31,6 +33,11 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 	{
 		CombatComponent->OnCombatStateChanged.AddDynamic(this, &UBTTask_Attack::OnCombatStateChanged);
 		bIsListening = true;
+	}
+	
+	if (AEnemyAIController* EIC = Cast<AEnemyAIController>(Controller))
+	{
+		EIC->SetLastAttackTime(GetWorld()->GetTimeSeconds());
 	}
 	
 	CombatComponent->HandleCombatInput(InputType);
