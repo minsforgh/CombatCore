@@ -102,8 +102,7 @@ void UHitboxManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UHitboxManager::StartDetection()
 {
-	if (IsComponentTickEnabled()) return;
-
+	
 	AlreadyHitActors.Reset();
 	PreviousTracePoints.Reset();
 	CurrentTracePoints.SetNum(TracePointCount);
