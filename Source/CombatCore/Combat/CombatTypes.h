@@ -97,7 +97,10 @@ inline bool FCombatStateMachine::CanTransition(ECombatState NewState, bool bIsIn
 	switch (CurrentState)
 	{
 	case ECombatState::Idle:
-		return NewState == ECombatState::Attacking || NewState == ECombatState::Dodging;
+		return NewState == ECombatState::Attacking 
+		|| NewState == ECombatState::Dodging
+		|| NewState == ECombatState::HitStun
+		|| NewState == ECombatState::Dead;
 		
 	case ECombatState::Attacking:
 		// 공격 중 회피는 CancelWindow 구간에서만 허용
