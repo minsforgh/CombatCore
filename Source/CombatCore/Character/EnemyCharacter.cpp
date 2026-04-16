@@ -23,6 +23,8 @@ AEnemyCharacter::AEnemyCharacter()
 	HealthBarWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
 	HealthBarWidgetComponent->SetDrawAtDesiredSize(true);
 	HealthBarWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
+	HealthBarWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HealthBarWidgetComponent->SetGenerateOverlapEvents(false);
 }
 
 void AEnemyCharacter::BeginPlay()

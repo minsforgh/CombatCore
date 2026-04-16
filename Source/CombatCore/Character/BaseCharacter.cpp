@@ -3,15 +3,20 @@
 #include "Combat/CombatComponent.h"
 #include "Combat/HitboxManager.h"
 #include "Combat/HealthComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 ABaseCharacter::ABaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	
+
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	HitboxManager = CreateDefaultSubobject<UHitboxManager>(TEXT("HitboxManager"));
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
-	
+
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	}
 }
 
 void ABaseCharacter::BeginPlay()
