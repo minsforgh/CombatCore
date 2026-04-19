@@ -4,6 +4,7 @@
 #include "Combat/HitboxManager.h"
 #include "InputBufferComponent.h"
 #include "Character/BaseCharacter.h"
+#include "Character/PlayerCharacter.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -71,6 +72,8 @@ void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		HitboxManager->OnHitDetected.RemoveDynamic(this, &UCombatComponent::HandleHitDetected);
 	}
+
+	GetWorld()->GetTimerManager().ClearTimer(HitStopTimerHandle);
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -294,13 +297,23 @@ void UCombatComponent::HandleHitDetected(const FHitResult& HitResult, AActor* Hi
 		{
 			DamageInfo.Damage = Step->Damage;
 			DamageInfo.KnockbackForce = Step->KnockbackForce;
+			DamageInfo.HitStopDuration = Step->HitStopDuration;
+			DamageInfo.AttackerShakeClass = Step->AttackerShakeClass;
+			DamageInfo.VictimShakeClass = Step->VictimShakeClass;
 		}
 	}
 
 	FVector Direction = (HitActor->GetActorLocation() - GetOwner()->GetActorLocation()).GetSafeNormal();
 	DamageInfo.KnockbackDirection = Direction;
-
+	
 	TargetCombat->ReceiveDamage(DamageInfo);
+
+	// 공격자 히트스톱 + 셰이크 — 광역 히트 시 중첩 정책(longer wins)으로 1회분 수렴
+	ApplyHitStop(DamageInfo.HitStopDuration);
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+	{
+		Player->PlayHitCameraShake(DamageInfo.AttackerShakeClass);
+	}
 }
 
 // 피격자 측 — 데미지 적용 + 상태 전이 (HitStun/Dead)
@@ -343,6 +356,41 @@ void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 	{
 		TryChangeState(ECombatState::Dead);
 	}
+	
+	// 사망 일격에도 히트스톱/셰이크 적용 — 마지막 타격의 임팩트 보장
+	ApplyHitStop(DamageInfo.HitStopDuration);
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+	{
+		Player->PlayHitCameraShake(DamageInfo.VictimShakeClass);
+	}
+}
+
+// CustomTimeDilation=0으로 액터를 일시 정지, WorldTimer로 복원
+// 중첩 정책: 진행 중인 히트스톱보다 짧은 요청은 무시 (longer wins)
+void UCombatComponent::ApplyHitStop(float Duration)
+{
+	if (Duration <= 0.f) return;
+	Duration = FMath::Min(Duration, MaxHitStopDuration);
+
+	AActor* Owner = GetOwner();
+	if (!IsValid(Owner)) return;
+
+	// WorldTimer 사용 필수 — Actor Timer는 CustomTimeDilation=0에서 멈춰 복원 불능
+	FTimerManager& TM = GetWorld()->GetTimerManager();
+	const float Remaining = TM.GetTimerRemaining(HitStopTimerHandle);
+	if (Remaining >= Duration) return;
+
+	TM.ClearTimer(HitStopTimerHandle);
+	Owner->CustomTimeDilation = 0.f;
+
+	TWeakObjectPtr<AActor> WeakOwner = Owner;
+	TM.SetTimer(HitStopTimerHandle, [WeakOwner]()
+	{
+		if (AActor* O = WeakOwner.Get())
+		{
+			O->CustomTimeDilation = 1.f;
+		}
+	}, Duration, false);
 }
 
 // 모든 상태 전이는 이 함수를 통해야 한다 — Broadcast 경로를 단일화하여 누락 방지

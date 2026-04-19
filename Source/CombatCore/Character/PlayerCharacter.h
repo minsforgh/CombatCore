@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputBufferComponent;
+class UCameraShakeBase;
 struct FInputActionValue;
 
 UCLASS()
@@ -88,4 +89,6 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
 	FORCEINLINE UInputBufferComponent* GetInputBufferComponent() const { return InputBufferComponent; }
+	
+	void PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale = 1.f);
 };

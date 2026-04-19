@@ -26,9 +26,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Distance")
 	float AttackRange = 200.f;
 	
-	UPROPERTY(EditAnywhere, Category = "Distance")
-	float MaintainDistance = 150.f;
-	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AttackCooldown = 2.0f;
 

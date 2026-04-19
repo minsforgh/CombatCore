@@ -61,7 +61,7 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 	
 	BB->SetValueAsObject(TargetActorKey.SelectedKeyName, Player);
 	
-	if (bOnCooldown || Distance < MaintainDistance)
+	if (bOnCooldown)
 	{
 		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, (uint8)EEnemyAIState::Wait);
 	}

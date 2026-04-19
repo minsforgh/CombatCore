@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 
 #include "Character/PlayerCharacter.h"
 #include "Engine/LocalPlayer.h"
@@ -126,5 +124,15 @@ void APlayerCharacter::HeavyAttack(const FInputActionValue& Value)
 	if (UCombatComponent* Combat = GetCombatComponent())
 	{
 		Combat->HandleCombatInput(EInputType::Heavy);
+	}
+}
+
+void APlayerCharacter::PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale)
+{
+	if (!ShakeClass) return;
+	
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->ClientStartCameraShake(ShakeClass, Scale);
 	}
 }

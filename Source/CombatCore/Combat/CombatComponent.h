@@ -75,6 +75,11 @@ private:
 	bool bIsInCancelWindow = false;
 	
 	bool bComboAdvanceReady = false;
+	
+	FTimerHandle HitStopTimerHandle;
+	
+	UPROPERTY(EditAnywhere, Category = "HitStop", meta = (AllowPrivateAccess = "true"))
+	float MaxHitStopDuration = 0.2f;
 
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -97,6 +102,8 @@ public:
 	
 	UFUNCTION()
 	void ReceiveDamage(const FDamageInfo& DamageInfo);
+	
+	void ApplyHitStop(float Duration);
 
 private:
 	

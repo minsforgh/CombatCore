@@ -4,6 +4,7 @@
 #include "CombatTypes.generated.h"
 
 class UAnimMontage;
+class UCameraShakeBase;
 
 UENUM(BlueprintType)
 enum class ECombatState : uint8
@@ -48,6 +49,15 @@ struct FComboStep
 	UPROPERTY(EditAnywhere)
 	float KnockbackForce = 300.f;
 	
+	UPROPERTY(EditAnywhere)
+	float HitStopDuration = 0.f;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> AttackerShakeClass;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> VictimShakeClass;
+	
 };
 
 USTRUCT(BlueprintType)
@@ -71,6 +81,12 @@ struct FDamageInfo
 	
 	UPROPERTY()
 	FHitResult HitResult;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> AttackerShakeClass;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> VictimShakeClass;
 };
 
 USTRUCT(BlueprintType)
