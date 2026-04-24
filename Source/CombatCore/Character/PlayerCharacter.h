@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/BaseCharacter.h"
+#include "Combat/CombatTypes.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -12,6 +13,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputBufferComponent;
 class UCameraShakeBase;
+class UCurveFloat;
 struct FInputActionValue;
 
 UCLASS()
@@ -29,6 +31,8 @@ class COMBATCORE_API APlayerCharacter : public ABaseCharacter
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputBufferComponent> InputBufferComponent;
+	
+	FVector2D LastMovementInput = FVector2D::ZeroVector;
 	
 protected:
 	
@@ -54,6 +58,22 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* HeavyAttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* DodgeAction;
+
+	UPROPERTY(EditAnywhere, Category="Dodge")
+	float DodgeSpeed = 1000.f;
+
+	UPROPERTY(EditAnywhere, Category="Dodge")
+	TObjectPtr<UCurveFloat> DodgeCurve;
+
+	UPROPERTY(EditAnywhere, Category="Dodge")
+	float DodgeDuration = 0.45f;
+
+	FVector CachedDodgeDirection = FVector::ZeroVector;
+	float DodgeElapsedTime = 0.f;
+
 
 public:
 
@@ -64,7 +84,9 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
+	virtual void Tick(float DeltaTime) override;
+
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -80,6 +102,11 @@ protected:
 	
 	void HeavyAttack(const FInputActionValue& Value);
 	
+	void Dodge(const FInputActionValue& Value);
+	
+	// Move 키 뗀 시점 감지 - LastMovementInput 초기화
+	void OnMoveCompleted(const FInputActionValue& Value);
+
 public:
 
 	/** Returns CameraBoom subobject **/

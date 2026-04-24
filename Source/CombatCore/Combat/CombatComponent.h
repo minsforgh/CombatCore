@@ -13,6 +13,7 @@ class UComboDataAsset;
 class UInputBufferComponent;
 class UHitboxManager;
 class UHealthComponent;
+class UCombatAbility;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -80,7 +81,15 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "HitStop", meta = (AllowPrivateAccess = "true"))
 	float MaxHitStopDuration = 0.2f;
+	
+	bool bIsInvincible = false;
+	
+	UPROPERTY()
+	TMap<TSubclassOf<UCombatAbility>, TObjectPtr<UCombatAbility>> AbilityInstances;
 
+	UPROPERTY(EditAnywhere, Category = "Ability", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UCombatAbility> DodgeAbilityClass;
+	
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnCombatStateChanged OnCombatStateChanged;
@@ -104,6 +113,15 @@ public:
 	void ReceiveDamage(const FDamageInfo& DamageInfo);
 	
 	void ApplyHitStop(float Duration);
+	
+	bool IsInvincible() const {return bIsInvincible;}
+	
+	void ExecuteAbility(TSubclassOf<UCombatAbility> AbilityClass);
+	
+	void FinishAbility();
+	
+	TSubclassOf<UCombatAbility> GetDodgeAbilityClass() const {return DodgeAbilityClass;}
+
 
 private:
 	
@@ -124,6 +142,8 @@ private:
 	
 	void PlayHitReaction(EHitDirection Direction);
 	
+	UCombatAbility* GetOrCreateAbility(TSubclassOf<UCombatAbility> AbilityClass);
+	
 public:
 	void OnConsumeWindowEnter();
 	
@@ -134,4 +154,8 @@ public:
 	void OnCancelWindowExit();
 	
 	void OnComboResetNotify();
+	
+	void OnInvincibleFrameBegin();
+	
+	void OnInvincibleFrameEnd();
 };

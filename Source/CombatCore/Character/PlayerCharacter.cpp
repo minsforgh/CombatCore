@@ -11,9 +11,13 @@
 #include "InputActionValue.h"
 #include "Combat/CombatComponent.h"
 #include "Combat/InputBufferComponent.h"
+#include "Combat/CombatAbility.h"
+#include "Curves/CurveFloat.h"
 
 APlayerCharacter::APlayerCharacter()
-{	
+{
+	PrimaryActorTick.bCanEverTick = true;
+
 	// 컨트롤러(카메라) 회전과 캐릭터 독립
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -49,11 +53,12 @@ void APlayerCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-		
+
 		// Pitch 제한
 		PC->PlayerCameraManager->ViewPitchMin = -60.f;
 		PC->PlayerCameraManager->ViewPitchMax = 30.f;
 	}
+
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -62,6 +67,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{	
 		// 이동
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APlayerCharacter::OnMoveCompleted);
 		
 		// 시점 회전
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
@@ -75,28 +81,35 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		
 		//강공격
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &APlayerCharacter::HeavyAttack);
+		
+		//회피
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &APlayerCharacter::Dodge);
 	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	if (GetController() == nullptr) return;
-	
-	// ActionInputValue은 Vector 2D
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
-	
-	// 컨트롤러의 rotation (Yaw)
+
+	// 다음 Dodge 방향 판정에 필요하므로 항상 캐싱
+	LastMovementInput = MovementVector;
+
+	// Dodging 중 이동 입력 차단 — LaunchCharacter 이동만 유효하도록
+	if (UCombatComponent* Combat = GetCombatComponent())
+	{
+		if (Combat->GetState() == ECombatState::Dodging) return;
+	}
+
 	const FRotator Rotation = GetController()->GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
-	// forward, right vector
+
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-	
-	// Add Movement
+
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	AddMovementInput(RightDirection, MovementVector.X);
-	
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value)
@@ -125,6 +138,57 @@ void APlayerCharacter::HeavyAttack(const FInputActionValue& Value)
 	{
 		Combat->HandleCombatInput(EInputType::Heavy);
 	}
+}
+
+void APlayerCharacter::Dodge(const FInputActionValue& Value)
+{
+	UCombatComponent* Combat = GetCombatComponent();
+	if (!Combat) return;
+
+	TSubclassOf<UCombatAbility> DodgeClass = Combat->GetDodgeAbilityClass();
+	if (!DodgeClass) return;
+
+	const FRotator CameraYawRot(0, GetControlRotation().Yaw, 0);
+	const FVector Forward = FRotationMatrix(CameraYawRot).GetUnitAxis(EAxis::X);
+	const FVector Right   = FRotationMatrix(CameraYawRot).GetUnitAxis(EAxis::Y);
+
+	FVector DodgeVec;
+	if (LastMovementInput.IsNearlyZero())
+	{
+		DodgeVec = -Forward;
+	}
+	else
+	{
+		DodgeVec = (Forward * LastMovementInput.Y + Right * LastMovementInput.X).GetSafeNormal();
+	}
+
+	SetActorRotation(CameraYawRot);
+
+	CachedDodgeDirection = DodgeVec;
+	DodgeElapsedTime = 0.f;
+
+	Combat->ExecuteAbility(DodgeClass);
+}
+
+void APlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (UCombatComponent* Combat = GetCombatComponent())
+	{
+		if (Combat->GetState() == ECombatState::Dodging)
+		{
+			DodgeElapsedTime += DeltaTime;
+			const float Alpha = FMath::Clamp(DodgeElapsedTime / DodgeDuration, 0.f, 1.f);
+			const float SpeedMultiplier = DodgeCurve ? DodgeCurve->GetFloatValue(Alpha) : 1.f;
+			GetCharacterMovement()->Velocity = CachedDodgeDirection * DodgeSpeed * SpeedMultiplier;
+		}
+	}
+}
+
+void APlayerCharacter::OnMoveCompleted(const FInputActionValue& Value)
+{
+	LastMovementInput = FVector2D::ZeroVector;
 }
 
 void APlayerCharacter::PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale)

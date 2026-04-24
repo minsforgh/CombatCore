@@ -1,4 +1,6 @@
 #include "Combat/CombatComponent.h"
+
+#include "CombatAbility.h"
 #include "ComboDataAsset.h"
 #include "HealthComponent.h"
 #include "Combat/HitboxManager.h"
@@ -231,6 +233,18 @@ void UCombatComponent::PlayHitReaction(EHitDirection Direction)
 	}
 }
 
+UCombatAbility* UCombatComponent::GetOrCreateAbility(TSubclassOf<UCombatAbility> AbilityClass)
+{
+	if (TObjectPtr<UCombatAbility>* Found = AbilityInstances.Find(AbilityClass))
+	{
+		return Found->Get();
+	}
+	
+	UCombatAbility* NewAbility = NewObject<UCombatAbility>(this, AbilityClass, NAME_None, RF_Transient);
+	AbilityInstances.Add(AbilityClass, NewAbility);
+	return NewAbility;
+}
+
 void UCombatComponent::OnConsumeWindowEnter()
 {
 	bComboAdvanceReady = true;
@@ -255,6 +269,16 @@ void UCombatComponent::OnCancelWindowExit()
 void UCombatComponent::OnComboResetNotify()
 {
 	if (GetState() == ECombatState::Attacking) EndCombo();
+}
+
+void UCombatComponent::OnInvincibleFrameBegin()
+{
+	bIsInvincible = true;
+}
+
+void UCombatComponent::OnInvincibleFrameEnd()
+{
+	bIsInvincible = false;
 }
 
 // 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
@@ -321,7 +345,8 @@ void UCombatComponent::HandleHitDetected(const FHitResult& HitResult, AActor* Hi
 void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 {
 	if (GetState() == ECombatState::Dead) return;
-
+	if (bIsInvincible) return;
+	
 	if (!HealthComponent) return;
 
 	HealthComponent->ApplyDamage(DamageInfo);
@@ -357,7 +382,6 @@ void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 		TryChangeState(ECombatState::Dead);
 	}
 	
-	// 사망 일격에도 히트스톱/셰이크 적용 — 마지막 타격의 임팩트 보장
 	ApplyHitStop(DamageInfo.HitStopDuration);
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
 	{
@@ -375,7 +399,7 @@ void UCombatComponent::ApplyHitStop(float Duration)
 	AActor* Owner = GetOwner();
 	if (!IsValid(Owner)) return;
 
-	// WorldTimer 사용 필수 — Actor Timer는 CustomTimeDilation=0에서 멈춰 복원 불능
+	// WorldTimer 사용 — Actor Timer는 CustomTimeDilation=0에서 멈춰 복원 불능
 	FTimerManager& TM = GetWorld()->GetTimerManager();
 	const float Remaining = TM.GetTimerRemaining(HitStopTimerHandle);
 	if (Remaining >= Duration) return;
@@ -391,6 +415,26 @@ void UCombatComponent::ApplyHitStop(float Duration)
 			O->CustomTimeDilation = 1.f;
 		}
 	}, Duration, false);
+}
+
+void UCombatComponent::ExecuteAbility(TSubclassOf<UCombatAbility> AbilityClass)
+{
+	if (!AbilityClass) return;
+	
+	UCombatAbility* Ability = GetOrCreateAbility(AbilityClass);
+	if (!Ability) return;
+	
+	if (!TryChangeState(Ability->GetRequiredState()))
+	{
+		return;
+	}
+	
+	Ability->Activate(this);
+}
+
+void UCombatComponent::FinishAbility()
+{
+	TryChangeState(ECombatState::Idle);
 }
 
 // 모든 상태 전이는 이 함수를 통해야 한다 — Broadcast 경로를 단일화하여 누락 방지
