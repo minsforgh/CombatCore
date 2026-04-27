@@ -20,14 +20,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector AIStateKey;
 	
-	UPROPERTY(EditAnywhere, Category = "Distance")
-	float DetectionRange = 1000.f;
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector bCurrentlySeenKey;
+	
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector LastSeenTimeKey;
 	
 	UPROPERTY(EditAnywhere, Category = "Distance")
 	float AttackRange = 200.f;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AttackCooldown = 2.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Perception")
+	float LoseGracePeriod = 2.0f;
 
 protected:
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;

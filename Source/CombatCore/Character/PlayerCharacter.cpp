@@ -13,6 +13,8 @@
 #include "Combat/InputBufferComponent.h"
 #include "Combat/CombatAbility.h"
 #include "Curves/CurveFloat.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -40,6 +42,11 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 	
 	InputBufferComponent = CreateDefaultSubobject<UInputBufferComponent>(TEXT("InputBufferComponent"));
+	
+	StimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSourceComponent"));
+	StimuliSourceComponent->RegisterForSense(TSubclassOf<UAISense>(UAISense_Sight::StaticClass()));
+	StimuliSourceComponent->bAutoRegister = true;
+	
 }
 
 void APlayerCharacter::BeginPlay()

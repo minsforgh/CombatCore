@@ -14,6 +14,7 @@ class UInputAction;
 class UInputBufferComponent;
 class UCameraShakeBase;
 class UCurveFloat;
+class UAIPerceptionStimuliSourceComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -31,6 +32,9 @@ class COMBATCORE_API APlayerCharacter : public ABaseCharacter
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputBufferComponent> InputBufferComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSourceComponent;
 	
 	FVector2D LastMovementInput = FVector2D::ZeroVector;
 	
