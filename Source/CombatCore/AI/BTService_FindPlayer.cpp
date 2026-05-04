@@ -6,6 +6,7 @@
 #include "Combat/HealthComponent.h"
 #include "AI/EnemyAITypes.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UBTService_FindPlayer::UBTService_FindPlayer()
 {
@@ -23,6 +24,24 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 	
 	AEnemyAIController* EIC = Cast<AEnemyAIController>(OwnerComp.GetAIOwner());
 	APawn* Pawn = EIC ? EIC->GetPawn() : nullptr;
+	
+	UCharacterMovementComponent* Movement = nullptr;
+	if (ACharacter* Character = Cast<ACharacter>(Pawn))
+	{
+		Movement = Character->GetCharacterMovement();
+	}
+
+	auto EnterIdle = [&]()
+	{
+		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, nullptr);
+		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Idle));
+		EIC->ClearFocus(EAIFocusPriority::Gameplay);
+		if (Movement)
+		{
+			Movement->bOrientRotationToMovement = false;
+			Movement->bUseControllerDesiredRotation = false;
+		}
+	};
 
 	if (!Pawn)
 	{
@@ -40,10 +59,10 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 
 	UObject* TargetObj = BB->GetValueAsObject(TargetActorKey.SelectedKeyName);
 	AActor* Target = Cast<AActor>(TargetObj);
+
 	if (!IsValid(Target))
 	{
-		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, nullptr);
-		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Idle));
+		EnterIdle();
 		return;
 	}
 
@@ -53,8 +72,7 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 		{
 			if (!HP->IsAlive())
 			{
-				BB->SetValueAsObject(TargetActorKey.SelectedKeyName, nullptr);
-				BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Idle));
+				EnterIdle();
 				return;
 			}
 		}
@@ -67,33 +85,44 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 
 	if (!bSeen && TimeSinceLost > LoseGracePeriod)
 	{
-		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Idle));
-		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, nullptr);
+		EnterIdle();
 		return;
 	}
+
+	EIC->SetFocus(Target);
 
 	const float Distance = FVector::Dist(Pawn->GetActorLocation(), Target->GetActorLocation());
 	const bool bOnCooldown = (Now - EIC->GetLastAttackTime()) < AttackCooldown;
 
+	EEnemyAIState NewState;
+
 	if (!bSeen)
 	{
-		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Chase));
-		return;
+		NewState = EEnemyAIState::Chase;
 	}
-
-	if (Distance <= AttackRange)
+	else if (Distance <= AttackRange)
 	{
-		if (bOnCooldown)
-		{
-			BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Wait));
-		}
-		else
-		{
-			BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Attack));
-		}
+		NewState = bOnCooldown ? EEnemyAIState::Wait : EEnemyAIState::Attack;
 	}
 	else
 	{
-		BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(EEnemyAIState::Chase));
+		NewState = EEnemyAIState::Chase;
+	}
+	
+	BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(NewState));
+	
+	if (Movement)
+	{
+		const bool bChasing = (NewState == EEnemyAIState::Chase);
+		Movement->bOrientRotationToMovement = bChasing;
+		Movement->bUseControllerDesiredRotation = !bChasing;
+		float NewYawRate;
+		if (NewState == EEnemyAIState::Attack)
+			NewYawRate = 0.f;
+		else if (NewState == EEnemyAIState::Wait)
+			NewYawRate = 180.f;
+		else
+			NewYawRate = 360.f;
+		Movement->RotationRate.Yaw = NewYawRate;
 	}
 }

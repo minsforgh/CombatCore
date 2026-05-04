@@ -1,8 +1,7 @@
-
-#include "Combat/AnimNotifyState_InvincibleFrame.h"
+#include "AnimNotify/AnimNotifyState_CancelWindow.h"
 #include "Combat/CombatComponent.h"
 
-void UAnimNotifyState_InvincibleFrame::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+void UAnimNotifyState_CancelWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
@@ -11,12 +10,12 @@ void UAnimNotifyState_InvincibleFrame::NotifyBegin(USkeletalMeshComponent* MeshC
 	{
 		if (UCombatComponent* CombatComponent = Owner->FindComponentByClass<UCombatComponent>())
 		{
-			CombatComponent->OnInvincibleFrameBegin();
+			CombatComponent->OnCancelWindowEnter();
 		}
 	}
 }
 
-void UAnimNotifyState_InvincibleFrame::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+void UAnimNotifyState_CancelWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
@@ -25,12 +24,12 @@ void UAnimNotifyState_InvincibleFrame::NotifyEnd(USkeletalMeshComponent* MeshCom
 	{
 		if (UCombatComponent* CombatComponent = Owner->FindComponentByClass<UCombatComponent>())
 		{
-			CombatComponent->OnInvincibleFrameEnd();
+			CombatComponent->OnCancelWindowExit();
 		}
 	}
 }
 
-FString UAnimNotifyState_InvincibleFrame::GetNotifyName_Implementation() const
+FString UAnimNotifyState_CancelWindow::GetNotifyName_Implementation() const
 {
-	return FString("InvincibleFrame");
+	return FString("Cancel Window");
 }

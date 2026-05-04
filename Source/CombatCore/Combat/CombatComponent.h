@@ -71,6 +71,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "HitReaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> HitReaction_Right;
 	
+	UPROPERTY(EditAnywhere, Category = "Death", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> DeathMontage;
+	
 	int32 CurrentComboIndex = 0;
 	
 	bool bIsInCancelWindow = false;

@@ -23,6 +23,17 @@ AEnemyAIController::AEnemyAIController()
 	PerceptionComp->SetDominantSense(SightConfig->GetSenseImplementation());
 }
 
+void AEnemyAIController::ReportDamageThreat(AActor* Attacker)
+{
+	UBlackboardComponent* BB = GetBlackboardComponent();
+	if (!BB || !Attacker) return;
+	
+	BB->SetValueAsObject(TEXT("TargetActor"), Attacker);
+	BB->SetValueAsBool(TEXT("bCurrentlySeen"), true);
+	BB->SetValueAsFloat(TEXT("LastSeenTime"), GetWorld()->GetTimeSeconds());
+	BB->SetValueAsVector(TEXT("LastSeenLocation"), Attacker->GetActorLocation());
+}
+
 void AEnemyAIController::BeginPlay()
 {
 	Super::BeginPlay();

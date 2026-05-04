@@ -1,20 +1,22 @@
 
 #include "Character/EnemyCharacter.h"
-
 #include "AI/EnemyAIController.h"
 #include "Combat/HealthComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/HealthBarWidget.h"
+#include "Components/CapsuleComponent.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
+	
 	AIControllerClass = AEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
@@ -25,6 +27,8 @@ AEnemyCharacter::AEnemyCharacter()
 	HealthBarWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
 	HealthBarWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HealthBarWidgetComponent->SetGenerateOverlapEvents(false);
+	
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -64,6 +68,12 @@ void AEnemyCharacter::HandleSelfDeath(const FDamageInfo& Info)
 	{
 		HealthBarWidgetComponent->SetVisibility(false);
 	}
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->StopMovementImmediately();
+	DetachFromControllerPendingDestroy();
+	SetLifeSpan(DeathLifeSpan);
+	
 }
 
 void AEnemyCharacter::UpdateHealthBar()

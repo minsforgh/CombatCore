@@ -1,5 +1,4 @@
 #include "Combat/CombatComponent.h"
-
 #include "CombatAbility.h"
 #include "ComboDataAsset.h"
 #include "HealthComponent.h"
@@ -7,6 +6,8 @@
 #include "InputBufferComponent.h"
 #include "Character/BaseCharacter.h"
 #include "Character/PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AI/EnemyAIController.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -133,10 +134,9 @@ void UCombatComponent::StartCombo(EInputType InputType)
 		return;
 	}
 
-	if (!TryChangeState(ECombatState::Attacking))
-	{
-		return;
-	}
+	if (!TryChangeState(ECombatState::Attacking)) return;
+	
+	OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
 
 	const float Duration = OwnerCharacter->PlayAnimMontage(Step->Montage);
 	if (Duration <= 0.f)
@@ -350,7 +350,12 @@ void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 	if (!HealthComponent) return;
 
 	HealthComponent->ApplyDamage(DamageInfo);
-
+	
+	if (AEnemyAIController* EIC = Cast<AEnemyAIController>(OwnerCharacter->GetController()))
+	{
+		EIC->ReportDamageThreat(DamageInfo.Instigator.Get());
+	}
+	
 	if (GetState() == ECombatState::Attacking)
 	{
 		ResetComboData();
@@ -380,6 +385,10 @@ void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 	else
 	{
 		TryChangeState(ECombatState::Dead);
+		if (DeathMontage)
+		{
+			OwnerCharacter->PlayAnimMontage(DeathMontage);
+		}
 	}
 	
 	ApplyHitStop(DamageInfo.HitStopDuration);

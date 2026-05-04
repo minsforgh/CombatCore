@@ -1,5 +1,5 @@
 
-#include "Combat/AnimNotify_ComboReset.h"
+#include "AnimNotify/AnimNotify_ComboReset.h"
 #include "Combat/CombatComponent.h"
 
 void UAnimNotify_ComboReset::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)

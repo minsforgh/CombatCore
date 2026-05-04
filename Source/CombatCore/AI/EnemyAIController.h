@@ -18,6 +18,8 @@ public:
 	float GetLastAttackTime() const { return LastAttackTime; }
 	void SetLastAttackTime(float Time) { LastAttackTime = Time; }
 	bool IsShowingDebug() const { return bShowDebug; }
+	
+	void ReportDamageThreat(AActor* Attacker);
 
 protected:
 	virtual void BeginPlay() override;

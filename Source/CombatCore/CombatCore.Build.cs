@@ -25,20 +25,7 @@ public class CombatCore : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
-			"CombatCore",
-			"CombatCore/Variant_Platforming",
-			"CombatCore/Variant_Platforming/Animation",
-			"CombatCore/Variant_Combat",
-			"CombatCore/Variant_Combat/AI",
-			"CombatCore/Variant_Combat/Animation",
-			"CombatCore/Variant_Combat/Gameplay",
-			"CombatCore/Variant_Combat/Interfaces",
-			"CombatCore/Variant_Combat/UI",
-			"CombatCore/Variant_SideScrolling",
-			"CombatCore/Variant_SideScrolling/AI",
-			"CombatCore/Variant_SideScrolling/Gameplay",
-			"CombatCore/Variant_SideScrolling/Interfaces",
-			"CombatCore/Variant_SideScrolling/UI"
+			"CombatCore"
 		});
 
 		// Uncomment if you are using Slate UI

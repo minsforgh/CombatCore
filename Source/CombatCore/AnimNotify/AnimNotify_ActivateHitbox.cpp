@@ -1,5 +1,5 @@
 
-#include "Combat/AnimNotify_ActivateHitbox.h"
+#include "AnimNotify/AnimNotify_ActivateHitbox.h"
 #include "Combat/HitboxManager.h"
 
 void UAnimNotify_ActivateHitbox::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,

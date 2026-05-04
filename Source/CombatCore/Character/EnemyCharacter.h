@@ -25,7 +25,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	float HealthBarMaxVisibleDistance = 3000.f;
-
+	
+	UPROPERTY(EditAnywhere, Category = "Death")
+	float DeathLifeSpan = 5.f;
+	
 private:
 	UFUNCTION()
 	void HandleSelfDeath(const FDamageInfo& Info);

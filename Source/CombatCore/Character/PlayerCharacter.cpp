@@ -100,13 +100,11 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// 다음 Dodge 방향 판정에 필요하므로 항상 캐싱
 	LastMovementInput = MovementVector;
 
-	// Dodging 중 이동 입력 차단 — LaunchCharacter 이동만 유효하도록
 	if (UCombatComponent* Combat = GetCombatComponent())
 	{
-		if (Combat->GetState() == ECombatState::Dodging) return;
+		if (Combat->GetState() != ECombatState::Idle) return;
 	}
 
 	const FRotator Rotation = GetController()->GetControlRotation();

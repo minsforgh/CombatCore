@@ -1,10 +1,9 @@
 
 #include "AI/BTTask_Attack.h"
 #include "AIController.h"
-#include "EnemyAIController.h"
+#include "AI/EnemyAIController.h"
 #include "Combat/CombatComponent.h"
 #include "Character/BaseCharacter.h"
-#include "AI/EnemyAIController.h"
 
 
 UBTTask_Attack::UBTTask_Attack()
@@ -40,6 +39,8 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 		EIC->SetLastAttackTime(GetWorld()->GetTimeSeconds());
 	}
 	
+	Controller->StopMovement();
+
 	CombatComponent->HandleCombatInput(InputType);
 
 	return EBTNodeResult::InProgress;

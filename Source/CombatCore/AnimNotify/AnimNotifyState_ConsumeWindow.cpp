@@ -1,6 +1,6 @@
 
-#include "Combat/AnimNotifyState_ConsumeWindow.h"
-#include "CombatComponent.h"
+#include "AnimNotify/AnimNotifyState_ConsumeWindow.h"
+#include "Combat/CombatComponent.h"
 
 void UAnimNotifyState_ConsumeWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
                                                  float TotalDuration, const FAnimNotifyEventReference& EventReference)
