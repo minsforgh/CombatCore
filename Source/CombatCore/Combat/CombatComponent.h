@@ -87,6 +87,9 @@ private:
 	
 	bool bIsInvincible = false;
 	
+	FVector CachedAttackForward = FVector::ZeroVector;
+	float AttackImpulseElapsedTime = 0.f;
+	
 	UPROPERTY()
 	TMap<TSubclassOf<UCombatAbility>, TObjectPtr<UCombatAbility>> AbilityInstances;
 
@@ -124,7 +127,8 @@ public:
 	void FinishAbility();
 	
 	TSubclassOf<UCombatAbility> GetDodgeAbilityClass() const {return DodgeAbilityClass;}
-
+	
+	FVector GetAttackImpulseVelocity(float DeltaTime);
 
 private:
 	

@@ -188,6 +188,14 @@ void APlayerCharacter::Tick(float DeltaTime)
 			const float SpeedMultiplier = DodgeCurve ? DodgeCurve->GetFloatValue(Alpha) : 1.f;
 			GetCharacterMovement()->Velocity = CachedDodgeDirection * DodgeSpeed * SpeedMultiplier;
 		}
+		else if (Combat->GetState() == ECombatState::Attacking)
+		{
+			const FVector Impulse = Combat->GetAttackImpulseVelocity(DeltaTime);
+			if (!Impulse.IsZero())
+			{
+				GetCharacterMovement()->Velocity = FVector(Impulse.X, Impulse.Y, GetCharacterMovement()->Velocity.Z); 
+			}
+		}
 	}
 }
 

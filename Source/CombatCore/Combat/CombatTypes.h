@@ -5,6 +5,7 @@
 
 class UAnimMontage;
 class UCameraShakeBase;
+class UCurveFloat;
 
 UENUM(BlueprintType)
 enum class ECombatState : uint8
@@ -52,11 +53,17 @@ struct FComboStep
 	UPROPERTY(EditAnywhere)
 	float HitStopDuration = 0.f;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Camera Shake")
 	TSubclassOf<UCameraShakeBase> AttackerShakeClass;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Camera Shake")
 	TSubclassOf<UCameraShakeBase> VictimShakeClass;
+	
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	TObjectPtr<UCurveFloat> AttackImpulseCurve;
+	
+	UPROPERTY(EditAnywhere, Category = "Impulse")
+	float AttackImpulseSpeed = 0.f;
 	
 };
 
@@ -124,9 +131,11 @@ inline bool FCombatStateMachine::CanTransition(ECombatState NewState, bool bIsIn
 		return NewState == ECombatState::Idle || NewState == ECombatState::HitStun || NewState == ECombatState::Dead;
 		
 	case ECombatState::Dodging:
+		if (NewState == ECombatState::Attacking) return bIsInCancelWindow;
 		return NewState == ECombatState::Idle || NewState == ECombatState::HitStun || NewState == ECombatState::Dead;
 		
 	case ECombatState::HitStun:
+		if (NewState == ECombatState::Dodging) return bIsInCancelWindow;
 		return NewState == ECombatState::Idle || NewState == ECombatState::Dead || NewState == ECombatState::HitStun;
 		
 	case ECombatState::Dead:

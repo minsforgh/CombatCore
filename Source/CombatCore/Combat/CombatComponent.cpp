@@ -86,6 +86,20 @@ ECombatState UCombatComponent::GetState() const
 	return StateMachine.GetState();
 }
 
+FVector UCombatComponent::GetAttackImpulseVelocity(float DeltaTime)
+{
+	if (!ActiveComboData.IsValid()) return FVector::ZeroVector;
+	const FComboStep* Step = ActiveComboData->GetStep(CurrentComboIndex);
+	if (!Step || !Step->AttackImpulseCurve || Step->AttackImpulseSpeed <= 0.f) return FVector::ZeroVector;
+	
+	AttackImpulseElapsedTime += DeltaTime;
+	const float Duration = Step->Montage ? Step->Montage->GetPlayLength() : 1.f;
+	const float Alpha = FMath::Clamp(AttackImpulseElapsedTime / Duration, 0.f, 1.f);
+	const float SpeedMultiplier = Step->AttackImpulseCurve->GetFloatValue(Alpha);
+	
+	return CachedAttackForward * Step->AttackImpulseSpeed * SpeedMultiplier;
+}
+
 // Idle이면 콤보 시작, Attacking 중이면 버퍼에 저장 후 소비 구간이면 즉시 진행
 void UCombatComponent::HandleCombatInput(EInputType InputType)
 {
@@ -104,6 +118,22 @@ void UCombatComponent::HandleCombatInput(EInputType InputType)
 		{
 			TryConsumeBufferedInput();
 		}
+	}
+	else if (GetState() == ECombatState::Dodging)
+	{
+		StartCombo(InputType);
+	}
+}
+
+// 버퍼에 유효한 입력이 있으면 소비하여 콤보 진행
+void UCombatComponent::TryConsumeBufferedInput()
+{
+	if (!InputBufferComponent.IsValid()) return;
+
+	EInputType ConsumedInputType;
+	if (InputBufferComponent->ConsumeBuffer(ConsumedInputType))
+	{
+		AdvanceCombo(ConsumedInputType);
 	}
 }
 
@@ -135,9 +165,11 @@ void UCombatComponent::StartCombo(EInputType InputType)
 	}
 
 	if (!TryChangeState(ECombatState::Attacking)) return;
-	
-	OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
 
+	OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
+	CachedAttackForward = OwnerCharacter->GetActorForwardVector();
+	AttackImpulseElapsedTime = 0;
+	
 	const float Duration = OwnerCharacter->PlayAnimMontage(Step->Montage);
 	if (Duration <= 0.f)
 	{
@@ -169,22 +201,38 @@ void UCombatComponent::AdvanceCombo(EInputType InputType)
 		EndCombo();
 		return;
 	}
+	
 	ActiveCombatMontage = NextStep->Montage;
 	CurrentComboIndex = *NextIndex;
+	CachedAttackForward = OwnerCharacter->GetActorForwardVector();
+	AttackImpulseElapsedTime = 0.f;
 	bComboAdvanceReady = false;
 }
 
-// 버퍼에 유효한 입력이 있으면 소비하여 콤보 진행
-void UCombatComponent::TryConsumeBufferedInput()
+// 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
+void UCombatComponent::ResetComboData()
 {
-	if (!InputBufferComponent.IsValid()) return;
+	CurrentComboIndex = 0;
+	bIsInCancelWindow = false;
+	bComboAdvanceReady = false;
+	ActiveCombatMontage = nullptr;
+	ActiveComboData = nullptr;
+	
+	CachedAttackForward = FVector::ZeroVector;
+	AttackImpulseElapsedTime = 0.f;
+	
+	if (InputBufferComponent.IsValid()) InputBufferComponent->ClearBuffer();
 
-	EInputType ConsumedInputType;
-	if (InputBufferComponent->ConsumeBuffer(ConsumedInputType))
-	{
-		AdvanceCombo(ConsumedInputType);
-	}
+	if (HitboxManager) HitboxManager->StopDetection();
 }
+
+// 콤보 자연 종료 — 데이터 정리 + Idle 복귀
+void UCombatComponent::EndCombo()
+{
+	ResetComboData();
+	TryChangeState(ECombatState::Idle);
+}
+
 
 // 공격자 위치 기준으로 피격자의 Forward/Right 내적 비교 → 4방향 판별
 EHitDirection UCombatComponent::CalcHitDirection(const FVector& InstigatorLocation) const
@@ -279,27 +327,6 @@ void UCombatComponent::OnInvincibleFrameBegin()
 void UCombatComponent::OnInvincibleFrameEnd()
 {
 	bIsInvincible = false;
-}
-
-// 콤보 데이터만 초기화, 상태 전이 없음 — 피격 시 사용
-void UCombatComponent::ResetComboData()
-{
-	CurrentComboIndex = 0;
-	bIsInCancelWindow = false;
-	bComboAdvanceReady = false;
-	ActiveCombatMontage = nullptr;
-	ActiveComboData = nullptr;
-
-	if (InputBufferComponent.IsValid()) InputBufferComponent->ClearBuffer();
-
-	if (HitboxManager) HitboxManager->StopDetection();
-}
-
-// 콤보 자연 종료 — 데이터 정리 + Idle 복귀
-void UCombatComponent::EndCombo()
-{
-	ResetComboData();
-	TryChangeState(ECombatState::Idle);
 }
 
 // 공격자 측 — FDamageInfo를 조립하여 피격자의 ReceiveDamage로 전달
