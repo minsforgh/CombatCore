@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,6 +13,7 @@ class UInputBufferComponent;
 class UHitboxManager;
 class UHealthComponent;
 class UCombatAbility;
+class UStaminaComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatStateChanged, ECombatState, OldState, ECombatState, NewState);
 
@@ -52,6 +52,8 @@ private:
 	TWeakObjectPtr<UComboDataAsset> ActiveComboData;
 	
 	TWeakObjectPtr<UInputBufferComponent> InputBufferComponent;
+	
+	TWeakObjectPtr<UStaminaComponent> StaminaComponent;
 	
 	UPROPERTY(EditAnywhere, Category = "ComboData", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UComboDataAsset> LightComboData;
@@ -144,7 +146,9 @@ private:
 	void AdvanceCombo(EInputType InputType);
 	
 	void TryConsumeBufferedInput();
-	
+
+	bool TryConsumeStamina(float Amount);
+
 	EHitDirection CalcHitDirection(const FVector& InstigatorLocation) const;
 	
 	void PlayHitReaction(EHitDirection Direction);

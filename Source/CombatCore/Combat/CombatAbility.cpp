@@ -71,6 +71,17 @@ void UCombatAbility::HandleTrackedMontageEnded(UAnimMontage* Montage, bool bInte
 	
 	if (!bInterrupted && OwnerComponent)
 	{
+		if (const UWorld* World = OwnerComponent->GetWorld())
+		{
+			LastActivationTime = World->GetTimeSeconds();
+		}
 		OwnerComponent->FinishAbility();
 	}
 }
+
+bool UCombatAbility::IsOnCooldown(float CurrentTime) const
+{
+	if (Cooldown <= 0.f) return false;
+	return (CurrentTime - LastActivationTime) < Cooldown;
+}
+

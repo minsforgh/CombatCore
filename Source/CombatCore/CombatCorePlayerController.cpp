@@ -1,8 +1,7 @@
 
 #include "CombatCorePlayerController.h"
-#include "Character/BaseCharacter.h"
-#include "Combat/HealthComponent.h"
-#include "UI/HealthBarWidget.h"
+#include "Character/PlayerCharacter.h"
+#include "UI/PlayerHUDWidget.h"
 
 
 void ACombatCorePlayerController::OnPossess(APawn* InPawn)
@@ -16,18 +15,18 @@ void ACombatCorePlayerController::OnPossess(APawn* InPawn)
 	
 	if (!PlayerHUDWidget && PlayerHUDClass)
 	{
-		PlayerHUDWidget = CreateWidget<UHealthBarWidget>(this, PlayerHUDClass);
+		PlayerHUDWidget = CreateWidget<UPlayerHUDWidget>(this, PlayerHUDClass);
 		if (PlayerHUDWidget)
 		{
 			PlayerHUDWidget->AddToViewport();
 		}
 	}
-	
+
 	if (PlayerHUDWidget)
 	{
-		if (ABaseCharacter* Char = Cast<ABaseCharacter>(InPawn))
+		if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(InPawn))
 		{
-			PlayerHUDWidget->BindToHealthComponent(Char->GetHealthComponent());
+			PlayerHUDWidget->BindToPlayer(PlayerChar);
 		}
 	}
 }

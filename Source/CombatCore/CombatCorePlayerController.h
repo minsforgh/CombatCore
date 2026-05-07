@@ -5,7 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CombatCorePlayerController.generated.h"
 
-class UHealthBarWidget;
+class UPlayerHUDWidget;
 
 UCLASS(abstract)
 class ACombatCorePlayerController : public APlayerController
@@ -15,10 +15,10 @@ class ACombatCorePlayerController : public APlayerController
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "HUD")
-	TSubclassOf<UHealthBarWidget> PlayerHUDClass;
+	TSubclassOf<UPlayerHUDWidget> PlayerHUDClass;
 	
 	UPROPERTY()
-	TObjectPtr<UHealthBarWidget> PlayerHUDWidget;
+	TObjectPtr<UPlayerHUDWidget> PlayerHUDWidget;
 	
 	virtual void OnPossess(APawn* InPawn) override;
 

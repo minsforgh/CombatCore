@@ -15,6 +15,7 @@ class UInputBufferComponent;
 class UCameraShakeBase;
 class UCurveFloat;
 class UAIPerceptionStimuliSourceComponent;
+class UStaminaComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -35,6 +36,9 @@ class COMBATCORE_API APlayerCharacter : public ABaseCharacter
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSourceComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaminaComponent> StaminaComponent;
 	
 	FVector2D LastMovementInput = FVector2D::ZeroVector;
 	
@@ -120,6 +124,8 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
 	FORCEINLINE UInputBufferComponent* GetInputBufferComponent() const { return InputBufferComponent; }
+	
+	FORCEINLINE UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
 	
 	void PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale = 1.f);
 };

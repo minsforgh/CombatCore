@@ -65,6 +65,9 @@ struct FComboStep
 	UPROPERTY(EditAnywhere, Category = "Impulse")
 	float AttackImpulseSpeed = 0.f;
 	
+	UPROPERTY(EditAnywhere, Category = "Cost")
+	float StaminaCost = 15.f;
+	
 };
 
 USTRUCT(BlueprintType)

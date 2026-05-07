@@ -18,6 +18,10 @@ public:
 	virtual void End(UCombatComponent* Comp);
 
 	virtual ECombatState GetRequiredState() const PURE_VIRTUAL(, return ECombatState::Idle;);
+	
+	float GetStaminaCost() const { return StaminaCost;}
+
+	bool IsOnCooldown(float CurrentTime) const;
 
 protected:
 	bool PlayMontageAndTrack(UAnimMontage* Montage);
@@ -30,4 +34,12 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> TrackedMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Cost")
+	float StaminaCost = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Cost")
+	float Cooldown = 0.f;
+	
+	float LastActivationTime = -1e6f;
 };

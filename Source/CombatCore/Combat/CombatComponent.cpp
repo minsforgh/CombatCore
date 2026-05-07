@@ -8,7 +8,7 @@
 #include "Character/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AI/EnemyAIController.h"
-
+#include "Combat/StaminaComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -27,11 +27,13 @@ void UCombatComponent::BeginPlay()
 		SetActive(false);
 		return;
 	}
-
-
-	// 플레이어 전용 — 적 캐릭터에는 없으므로 nullptr 허용
-	InputBufferComponent = OwnerCharacter->FindComponentByClass<UInputBufferComponent>();
-
+	
+	if (APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter))
+	{
+		InputBufferComponent = PlayerCharacter->GetInputBufferComponent();
+		StaminaComponent = PlayerCharacter->GetStaminaComponent();
+	}
+	
 	HitboxManager = OwnerCharacter->GetHitboxManager();
 	if (HitboxManager)
 	{
@@ -163,6 +165,8 @@ void UCombatComponent::StartCombo(EInputType InputType)
 		UE_LOG(LogTemp, Warning, TEXT("UCombatComponent:MontageToPlay is NULL"));
 		return;
 	}
+	
+	if (!TryConsumeStamina(Step->StaminaCost)) return;
 
 	if (!TryChangeState(ECombatState::Attacking)) return;
 
@@ -193,6 +197,8 @@ void UCombatComponent::AdvanceCombo(EInputType InputType)
 
 	const FComboStep* NextStep = ActiveComboData->GetStep(*NextIndex);
 	if (!NextStep || !NextStep->Montage) return;
+	
+	if (!TryConsumeStamina(NextStep->StaminaCost)) return;
 
 	const float Duration = OwnerCharacter->PlayAnimMontage(NextStep->Montage);
 	if (Duration <= 0.f)
@@ -453,6 +459,12 @@ void UCombatComponent::ApplyHitStop(float Duration)
 	}, Duration, false);
 }
 
+bool UCombatComponent::TryConsumeStamina(float Amount)
+{
+	if (!StaminaComponent.IsValid()) return true;
+	return StaminaComponent->ConsumeStamina(Amount);
+}
+
 void UCombatComponent::ExecuteAbility(TSubclassOf<UCombatAbility> AbilityClass)
 {
 	if (!AbilityClass) return;
@@ -460,11 +472,19 @@ void UCombatComponent::ExecuteAbility(TSubclassOf<UCombatAbility> AbilityClass)
 	UCombatAbility* Ability = GetOrCreateAbility(AbilityClass);
 	if (!Ability) return;
 	
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	if (Ability->IsOnCooldown(CurrentTime)) return;
+
+	if (!StateMachine.CanTransition(Ability->GetRequiredState(), bIsInCancelWindow)) return;
+
+	if (!TryConsumeStamina(Ability->GetStaminaCost())) return;
+
 	if (!TryChangeState(Ability->GetRequiredState()))
 	{
 		return;
 	}
-	
+
 	Ability->Activate(this);
 }
 

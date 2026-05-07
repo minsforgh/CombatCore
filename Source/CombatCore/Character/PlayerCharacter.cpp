@@ -15,6 +15,7 @@
 #include "Curves/CurveFloat.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "Combat/StaminaComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -46,6 +47,8 @@ APlayerCharacter::APlayerCharacter()
 	StimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSourceComponent"));
 	StimuliSourceComponent->RegisterForSense(TSubclassOf<UAISense>(UAISense_Sight::StaticClass()));
 	StimuliSourceComponent->bAutoRegister = true;
+	
+	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("StaminaComponent"));
 	
 }
 
@@ -167,12 +170,15 @@ void APlayerCharacter::Dodge(const FInputActionValue& Value)
 		DodgeVec = (Forward * LastMovementInput.Y + Right * LastMovementInput.X).GetSafeNormal();
 	}
 
-	SetActorRotation(CameraYawRot);
-
-	CachedDodgeDirection = DodgeVec;
-	DodgeElapsedTime = 0.f;
-
+	const bool bWasDodging = (Combat->GetState() == ECombatState::Dodging);
 	Combat->ExecuteAbility(DodgeClass);
+
+	if (!bWasDodging && Combat->GetState() == ECombatState::Dodging)
+	{
+		SetActorRotation(CameraYawRot);
+		CachedDodgeDirection = DodgeVec;
+		DodgeElapsedTime = 0.f;
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
