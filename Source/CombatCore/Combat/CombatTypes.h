@@ -6,6 +6,7 @@
 class UAnimMontage;
 class UCameraShakeBase;
 class UCurveFloat;
+class UNiagaraSystem;
 
 UENUM(BlueprintType)
 enum class ECombatState : uint8
@@ -68,6 +69,12 @@ struct FComboStep
 	UPROPERTY(EditAnywhere, Category = "Cost")
 	float StaminaCost = 15.f;
 	
+	UPROPERTY(EditAnywhere, Category = "FX")
+	TObjectPtr<UNiagaraSystem> HitImpactVFX;
+	
+	UPROPERTY(EditAnywhere, Category = "FX")
+	TObjectPtr<USoundBase> HitImpactSound;
+	
 };
 
 USTRUCT(BlueprintType)
@@ -97,6 +104,12 @@ struct FDamageInfo
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCameraShakeBase> VictimShakeClass;
+	
+	UPROPERTY()
+	TObjectPtr<UNiagaraSystem> HitImpactVFX;
+	
+	UPROPERTY()
+	TObjectPtr<USoundBase> HitImpactSound;
 };
 
 USTRUCT(BlueprintType)

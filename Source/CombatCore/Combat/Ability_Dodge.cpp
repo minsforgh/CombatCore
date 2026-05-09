@@ -1,6 +1,7 @@
 
 #include "Combat/Ability_Dodge.h"
 #include "Combat/CombatComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void UAbility_Dodge::Activate(UCombatComponent* Comp)
 {
@@ -19,6 +20,15 @@ void UAbility_Dodge::Activate(UCombatComponent* Comp)
 	if (!PlayMontageAndTrack(DodgeMontage))
 	{
 		Comp->FinishAbility();
+	}
+	
+	if (DodgeSound)
+	{
+		if (AActor* Owner = Comp->GetOwner())
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				Owner->GetWorld(), DodgeSound, Owner->GetActorLocation());
+		}
 	}
 }
 

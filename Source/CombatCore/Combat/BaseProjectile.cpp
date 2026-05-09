@@ -56,6 +56,8 @@ void ABaseProjectile::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor*
 			Info.HitStopDuration = HitStopDuration;
 			Info.HitResult = Hit;
 			Info.VictimShakeClass = VictimShakeClass;
+			Info.HitImpactVFX = HitImpactVFX;
+			Info.HitImpactSound = HitImpactSound;
 			
 			TargetCombat->ReceiveDamage(Info);
 		}

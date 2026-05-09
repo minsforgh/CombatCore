@@ -4,11 +4,15 @@
 #include "HealthComponent.h"
 #include "Combat/HitboxManager.h"
 #include "InputBufferComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Character/BaseCharacter.h"
 #include "Character/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AI/EnemyAIController.h"
 #include "Combat/StaminaComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -357,6 +361,8 @@ void UCombatComponent::HandleHitDetected(const FHitResult& HitResult, AActor* Hi
 			DamageInfo.HitStopDuration = Step->HitStopDuration;
 			DamageInfo.AttackerShakeClass = Step->AttackerShakeClass;
 			DamageInfo.VictimShakeClass = Step->VictimShakeClass;
+			DamageInfo.HitImpactVFX = Step->HitImpactVFX;
+			DamageInfo.HitImpactSound = Step->HitImpactSound;
 		}
 	}
 
@@ -383,6 +389,25 @@ void UCombatComponent::ReceiveDamage(const FDamageInfo& DamageInfo)
 	if (!HealthComponent) return;
 
 	HealthComponent->ApplyDamage(DamageInfo);
+	
+	FVector ImpactLocation = DamageInfo.HitResult.ImpactPoint;
+	if (ImpactLocation.IsZero())
+	{
+		ImpactLocation = OwnerCharacter->GetActorLocation();
+	}
+	
+	if (DamageInfo.HitImpactVFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), DamageInfo.HitImpactVFX, ImpactLocation,
+			FRotator::ZeroRotator, FVector(1.f), true);
+	}
+	
+	if (DamageInfo.HitImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(), DamageInfo.HitImpactSound, ImpactLocation);
+	}
 	
 	if (AEnemyAIController* EIC = Cast<AEnemyAIController>(OwnerCharacter->GetController()))
 	{

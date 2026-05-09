@@ -8,6 +8,7 @@ class USphereComponent;
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
 class UCameraShakeBase;
+class UNiagaraSystem;
 
 UCLASS()
 class COMBATCORE_API ABaseProjectile : public AActor
@@ -48,6 +49,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile|Damage", meta = (AllowPrivateAccess = true))
 	TSubclassOf<UCameraShakeBase> VictimShakeClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile|FX", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UNiagaraSystem> HitImpactVFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile|FX", meta = (AllowPrivateAccess = true))
+	TObjectPtr<USoundBase> HitImpactSound;
 
 	UFUNCTION()
 	void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,

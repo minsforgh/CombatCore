@@ -18,4 +18,7 @@ public:
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Dodge")
 	TObjectPtr<UAnimMontage> DodgeMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	TObjectPtr<USoundBase> DodgeSound;
 };
