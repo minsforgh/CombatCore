@@ -16,6 +16,7 @@ class UCameraShakeBase;
 class UCurveFloat;
 class UAIPerceptionStimuliSourceComponent;
 class UStaminaComponent;
+class UTargetingComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -39,6 +40,9 @@ class COMBATCORE_API APlayerCharacter : public ABaseCharacter
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaminaComponent> StaminaComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTargetingComponent> TargetingComponent;
 	
 	FVector2D LastMovementInput = FVector2D::ZeroVector;
 	
@@ -69,6 +73,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* DodgeAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* LockOnAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* SwitchTargetAction;
 
 	UPROPERTY(EditAnywhere, Category="Dodge")
 	float DodgeSpeed = 1000.f;
@@ -114,6 +124,9 @@ protected:
 	
 	// Move 키 뗀 시점 감지 - LastMovementInput 초기화
 	void OnMoveCompleted(const FInputActionValue& Value);
+	
+	void ToggleLockOn(const FInputActionValue& Value);
+	void SwitchTarget(const FInputActionValue& Value);
 
 public:
 
@@ -126,6 +139,8 @@ public:
 	FORCEINLINE UInputBufferComponent* GetInputBufferComponent() const { return InputBufferComponent; }
 	
 	FORCEINLINE UStaminaComponent* GetStaminaComponent() const { return StaminaComponent; }
+	
+	FORCEINLINE UTargetingComponent* GetTargetingComponent() const { return TargetingComponent; }
 	
 	void PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale = 1.f);
 };

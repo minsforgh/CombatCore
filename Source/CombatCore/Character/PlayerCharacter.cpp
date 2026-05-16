@@ -16,6 +16,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Combat/StaminaComponent.h"
+#include "Combat/TargetingComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -49,6 +50,8 @@ APlayerCharacter::APlayerCharacter()
 	StimuliSourceComponent->bAutoRegister = true;
 	
 	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("StaminaComponent"));
+	
+	TargetingComponent = CreateDefaultSubobject<UTargetingComponent>(TEXT("TargetingComponent"));
 	
 }
 
@@ -94,6 +97,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		
 		//회피
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &APlayerCharacter::Dodge);
+		
+		//락온
+		EnhancedInputComponent->BindAction(LockOnAction, ETriggerEvent::Started, this, &APlayerCharacter::ToggleLockOn);
+		EnhancedInputComponent->BindAction(SwitchTargetAction, ETriggerEvent::Started, this, &APlayerCharacter::SwitchTarget);
 	}
 }
 
@@ -123,6 +130,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 void APlayerCharacter::Look(const FInputActionValue& Value)
 {	
 	if (GetController() == nullptr) return;
+	if (TargetingComponent && TargetingComponent->IsLockedOn()) return;
 	
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 	
@@ -208,6 +216,21 @@ void APlayerCharacter::Tick(float DeltaTime)
 void APlayerCharacter::OnMoveCompleted(const FInputActionValue& Value)
 {
 	LastMovementInput = FVector2D::ZeroVector;
+}
+
+void APlayerCharacter::ToggleLockOn(const FInputActionValue& Value)
+{
+	if (TargetingComponent)
+	{
+		TargetingComponent->ToggleLockOn();
+	}
+}
+
+void APlayerCharacter::SwitchTarget(const FInputActionValue& Value)
+{
+	if (!TargetingComponent) return;
+	const float Direction = Value.Get<float>();
+	TargetingComponent->SwitchTarget(Direction);
 }
 
 void APlayerCharacter::PlayHitCameraShake(TSubclassOf<UCameraShakeBase> ShakeClass, float Scale)
