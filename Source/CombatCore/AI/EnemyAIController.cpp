@@ -13,7 +13,7 @@ AEnemyAIController::AEnemyAIController()
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
 	SightConfig->SightRadius = 2500.f;
 	SightConfig->LoseSightRadius = 2700.f;
-	SightConfig->PeripheralVisionAngleDegrees = 90.f;
+	SightConfig->PeripheralVisionAngleDegrees = 60.f;
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
@@ -61,13 +61,22 @@ void AEnemyAIController::Tick(float DeltaTime)
 	const FVector Loc = MyPawn->GetActorLocation();
 	const FVector Forward = MyPawn->GetActorForwardVector();
 	const float Radius = SightConfig->SightRadius;
-	const float Angle = SightConfig->PeripheralVisionAngleDegrees;
+	const float HalfAngle = SightConfig->PeripheralVisionAngleDegrees;
 
-	DrawDebugCircle(GetWorld(), Loc, Radius, 64, FColor::Green, false, -1.f, 0, 1.5f,
-		FVector(1, 0, 0), FVector(0, 1, 0), false);
+	constexpr int32 ArcSegments = 24;
+	const float StepAngle = (HalfAngle * 2.f) / ArcSegments;
 
-	FVector LeftDir = Forward.RotateAngleAxis(-Angle, FVector::UpVector);
-	FVector RightDir = Forward.RotateAngleAxis(Angle, FVector::UpVector);
+	for (int32 i = 0; i < ArcSegments; ++i)
+	{
+		const float A0 = -HalfAngle + StepAngle * i;
+		const float A1 = -HalfAngle + StepAngle * (i + 1);
+		FVector P0 = Loc + Forward.RotateAngleAxis(A0, FVector::UpVector) * Radius;
+		FVector P1 = Loc + Forward.RotateAngleAxis(A1, FVector::UpVector) * Radius;
+		DrawDebugLine(GetWorld(), P0, P1, FColor::Green, false, -1.f, 0, 2.f);
+	}
+
+	FVector LeftDir = Forward.RotateAngleAxis(-HalfAngle, FVector::UpVector);
+	FVector RightDir = Forward.RotateAngleAxis(HalfAngle, FVector::UpVector);
 	DrawDebugLine(GetWorld(), Loc, Loc + LeftDir * Radius, FColor::Green, false, -1.f, 0, 2.f);
 	DrawDebugLine(GetWorld(), Loc, Loc + RightDir * Radius, FColor::Green, false, -1.f, 0, 2.f);
 #endif

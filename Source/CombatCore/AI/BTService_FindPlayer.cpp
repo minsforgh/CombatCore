@@ -3,6 +3,7 @@
 #include "EnemyAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/BaseCharacter.h"
+#include "Combat/CombatComponent.h"
 #include "Combat/HealthComponent.h"
 #include "AI/EnemyAITypes.h"
 #include "DrawDebugHelpers.h"
@@ -94,6 +95,15 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 	const float Distance = FVector::Dist(Pawn->GetActorLocation(), Target->GetActorLocation());
 	const bool bOnCooldown = (Now - EIC->GetLastAttackTime()) < AttackCooldown;
 
+	bool bIsAttacking = false;
+	if (ABaseCharacter* BaseChar = Cast<ABaseCharacter>(Pawn))
+	{
+		if (UCombatComponent* Combat = BaseChar->GetCombatComponent())
+		{
+			bIsAttacking = (Combat->GetState() == ECombatState::Attacking);
+		}
+	}
+
 	EEnemyAIState NewState;
 
 	if (!bSeen)
@@ -108,21 +118,31 @@ void UBTService_FindPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* N
 	{
 		NewState = EEnemyAIState::Chase;
 	}
-	
+
 	BB->SetValueAsEnum(AIStateKey.SelectedKeyName, static_cast<uint8>(NewState));
-	
+
 	if (Movement)
 	{
-		const bool bChasing = (NewState == EEnemyAIState::Chase);
-		Movement->bOrientRotationToMovement = bChasing;
-		Movement->bUseControllerDesiredRotation = !bChasing;
-		float NewYawRate;
-		if (NewState == EEnemyAIState::Attack)
-			NewYawRate = 0.f;
-		else if (NewState == EEnemyAIState::Wait)
-			NewYawRate = 180.f;
+		if (bIsAttacking)
+		{
+			Movement->StopMovementImmediately();
+			Movement->bOrientRotationToMovement = false;
+			Movement->bUseControllerDesiredRotation = true;
+			Movement->RotationRate.Yaw = 0.f;
+		}
 		else
-			NewYawRate = 360.f;
-		Movement->RotationRate.Yaw = NewYawRate;
+		{
+			const bool bChasing = (NewState == EEnemyAIState::Chase);
+			Movement->bOrientRotationToMovement = bChasing;
+			Movement->bUseControllerDesiredRotation = !bChasing;
+			float NewYawRate;
+			if (NewState == EEnemyAIState::Attack)
+				NewYawRate = 0.f;
+			else if (NewState == EEnemyAIState::Wait)
+				NewYawRate = 180.f;
+			else
+				NewYawRate = 360.f;
+			Movement->RotationRate.Yaw = NewYawRate;
+		}
 	}
 }

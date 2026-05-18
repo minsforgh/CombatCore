@@ -175,7 +175,7 @@ void UCombatComponent::StartCombo(EInputType InputType)
 	if (!TryChangeState(ECombatState::Attacking)) return;
 
 	OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
-	CachedAttackForward = OwnerCharacter->GetActorForwardVector();
+	CachedAttackForward = OwnerCharacter->GetActorForwardVector().GetSafeNormal2D();
 	AttackImpulseElapsedTime = 0;
 	
 	const float Duration = OwnerCharacter->PlayAnimMontage(Step->Montage);
@@ -214,7 +214,7 @@ void UCombatComponent::AdvanceCombo(EInputType InputType)
 	
 	ActiveCombatMontage = NextStep->Montage;
 	CurrentComboIndex = *NextIndex;
-	CachedAttackForward = OwnerCharacter->GetActorForwardVector();
+	CachedAttackForward = OwnerCharacter->GetActorForwardVector().GetSafeNormal2D();
 	AttackImpulseElapsedTime = 0.f;
 	bComboAdvanceReady = false;
 }
