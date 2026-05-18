@@ -6,7 +6,7 @@
 
 > 플레이어와 AI가 동일한 전투 파이프라인을 공유하는 3인칭 액션 전투 데모
 
-<!-- **[시연 영상 보기](https://youtu.be/YOUR_VIDEO_ID)** -->
+**[시연 영상 보기](https://www.youtube.com/watch?v=PK9EOf7ynNw)**
 
 ---
 
