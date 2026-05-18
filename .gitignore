@@ -11,9 +11,14 @@ FileOpenOrder/
 .claude/
 CLAUDE.md
 
-# Third-party assets (Fab, Mixamo) - license restriction
+# Third-party assets - download separately (see ASSETS.md)
 Content/Fab/
-Content/Characters/Paladin/
+Content/Characters/Paladin/Mesh/
+Content/Characters/Paladin/Animations/*.uasset
+!Content/Characters/Paladin/Animations/BS_Locomotion.uasset
+Content/ParagonGrux/
+Content/ParagonSparrow/
+Content/Characters/Mannequins/
 
 # Visual Studio
 .vs/
